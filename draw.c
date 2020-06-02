@@ -8,6 +8,13 @@
 #include "math.h"
 #include "gmath.h"
 #include "symtab.h"
+#include "uthash.h"
+
+struct normals {
+  char vertex[256];
+  double * normal;
+  UT_hash_handle hh;
+};
 
 /*======== void draw_scanline() ==========
   Inputs: struct matrix *points
@@ -179,7 +186,7 @@ void add_polygon( struct matrix *polygons,
   ====================*/
 void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
                     double *view, double light[2][3], color ambient,
-                    struct constants *reflect) {
+                    struct constants *reflect, char shade[8]) {
   if ( polygons->lastcol < 3 ) {
     printf("Need at least 3 points to draw a polygon!\n");
     return;
@@ -187,17 +194,37 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
 
   int point;
   double *normal;
+  struct normals * nv = NULL;
+  char ver[256];
 
   for (point=0; point < polygons->lastcol-2; point+=3) {
 
+    struct normals * prod;
+    struct normals * tmp;
+    tmp = (struct normals *) malloc(sizeof *tmp);
     normal = calculate_normal(polygons, point);
+
+    sprintf(ver, "%0.3lf, %0.3lf, %0.3lf",
+            polygons->m[0][point],
+            polygons->m[1][point],
+            polygons->m[2][point]);
+
+    // printf("%s\n", v);
+    HASH_FIND_STR(nv, ver, prod);
+    if (prod == NULL) {
+      printf("%s: %lf %lf %lf\n", ver, normal[0], normal[1], normal[2]);
+      strcpy(tmp->vertex, ver);
+      tmp->normal = normal;
+      HASH_ADD_STR(nv, vertex, tmp);
+      HASH_FIND_STR(nv, ver, prod);
+      printf("%s: %lf %lf %lf\n", prod->vertex, prod->normal[0], prod->normal[1], prod->normal[2]);
+    }
 
     if ( normal[2] > 0 ) {
 
       // get color value only if front facing
       color i = get_lighting(normal, view, ambient, light, reflect);
       scanline_convert(polygons, point, s, zb, i);
-
       /* draw_line( polygons->m[0][point], */
       /*            polygons->m[1][point], */
       /*            polygons->m[2][point], */
