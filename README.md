@@ -14,8 +14,6 @@
 
 ## Will also try and impmement:
 - New primative shapes
-- Change the behavior of vary
-  - add a parameter to change how it calculates the change over time. e.g. Linear, Exponential, Logarithmic
 
 
 ----------------------------------------------------------------------------------------------------------------------------
