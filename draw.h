@@ -6,6 +6,10 @@
 #include "ml6.h"
 #include "symtab.h"
 
+#define STANDARD 0
+#define GOURAUD 1
+#define PHONG 2
+
 void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c);
 void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color il );
 
@@ -16,7 +20,7 @@ void add_polygons( struct matrix * polys,
                    double x2, double y2, double z2);
 void draw_polygons( struct matrix * polys, screen s, zbuffer zb,
                     double *view, double light[2][3], color ambient,
-                    struct constants *reflect, char shade[8]);
+                    struct constants *reflect, int shading);
 
 //advanced shapes
 //3d shapes

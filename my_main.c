@@ -70,8 +70,6 @@ void first_pass() {
   //These variables are defined at the bottom of symtab.h
   extern int num_frames;
   extern char name[128];
-  extern char shade[8];
-  extern char name[128];
 
   num_frames = -1;
   int exist = 0;
@@ -90,13 +88,7 @@ void first_pass() {
                 exit(0);
             }
             break;
-          case SHADING:
-            strncpy( shade, op[ctr].op.shading.p->name, sizeof(shade));
-            break;
       }
-  }
-  if(strcmp(shade, "") == 0) {
-    strncpy( shade, "flat", sizeof(shade));
   }
   if (num_frames != -1 && !exist) {
       strcpy(name, "Example");
@@ -151,11 +143,10 @@ struct vary_node ** second_pass() {
   return knobs;
 }
 
-
 void my_main() {
 
   struct vary_node ** knobs;
-  struct vary_node * ak;
+  struct vary_node * nv;
   first_pass();
   knobs = second_pass();
   char frame_name[128];
@@ -168,6 +159,8 @@ void my_main() {
   zbuffer zb;
   double step_3d = 100;
   double theta, xval, yval, zval, knob_val;
+
+  int shading = PHONG; 
 
   //Lighting values here for easy access
   color ambient;
@@ -221,12 +214,12 @@ void my_main() {
 
     //if there are multiple frames, set the knobs
     if ( num_frames > 1 ) {
-      ak = knobs[f];
+      nv = knobs[f];
 
-      while ( ak ) {
-        //printf("\tknob: %s value:%lf\n", ak->name, ak->value);
-        set_value( lookup_symbol( ak->name ), ak->value );
-        ak = ak-> next;
+      while ( nv ) {
+        //printf("\tknob: %s value:%lf\n", nv->name, nv->value);
+        set_value( lookup_symbol( nv->name ), nv->value );
+        nv = nv-> next;
       } //end while knobs
     }//end if multiple frames
 
@@ -253,7 +246,7 @@ void my_main() {
                      op[i].op.sphere.r, step_3d);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, t, zb, view, light, ambient,
-                        reflect, shade);
+                        reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
           break;
@@ -277,7 +270,7 @@ void my_main() {
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, t, zb, view, light, ambient,
-                        reflect, shade);
+                        reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
           break;
@@ -302,10 +295,21 @@ void my_main() {
                   op[i].op.box.d1[2]);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, t, zb, view, light, ambient,
-                        reflect, shade);
+                        reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
           break;
+
+        case MESH:
+          if(op[i].op.mesh.constants != NULL){
+            reflect = lookup_symbol(op[i].op.mesh.constants->name)->s.c;
+          }
+          if(op[i].op.mesh.cs != NULL){
+            matrix_mult(op[i].op.mesh.cs->s.m, tmp);
+          } 
+          else {
+            matrix_mult(peek(systems),tmp);
+          }
 
         case LINE:
           /* printf("Line: from: %6.2f %6.2f %6.2f to: %6.2f %6.2f %6.2f", */
@@ -391,6 +395,12 @@ void my_main() {
           matrix_mult(peek(systems), tmp);
           copy_matrix(tmp, peek(systems));
           tmp->lastcol = 0;
+          break;
+
+         case SHADING:
+          if(!strcmp(op[i].op.shading.p->name,"standard")) shading = STANDARD;
+          if(!strcmp(op[i].op.shading.p->name,"gouraud")) shading = GOURAUD;
+          if(!strcmp(op[i].op.shading.p->name,"phong")) shading = PHONG;
           break;
 
         case PUSH:

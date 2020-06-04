@@ -48,6 +48,111 @@ void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffe
   }
 }
 
+void draw_scanline_gouraud(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c0, color c1) {
+  int tmpX, tmpZ;
+  color tmpC;
+  double cred, cgreen, cblue, dred, dgreen, dblue;
+  color cF;
+  //swap if needed to assure left->right drawing
+  if (x0 > x1) {
+    tmpX = x0;
+    tmpZ = z0;
+    tmpC = c0;
+    x0 = x1;
+    z0 = z1;
+    c0 = c1;
+    x1 = tmpX;
+    z1 = tmpZ;
+    c1 = tmpC;
+  }
+
+  double delta_z;
+  delta_z = (x1 - x0) != 0 ? (z1 - z0) / (x1 - x0 + 1) : 0;
+  int x;
+  double z = z0;
+
+  cred = c0.red;
+  cgreen = c0.green;
+  cblue = c0.blue;
+
+  dred = (x1 - x0 != 0) ? ((double)c1.red-(double)c0.red)/(x1-x0+1) : 0;
+  dgreen = (x1 - x0 != 0) ? ((double)c1.green-(double)c0.green)/(x1-x0+1) : 0;
+  dblue = (x1 - x0 != 0) ? ((double)c1.blue-(double)c0.blue)/(x1-x0+1) : 0;
+
+  for(x=x0; x <= x1; x++) {
+
+    cF.red = (unsigned short)cred;
+    cF.green = (unsigned short)cgreen;
+    cF.blue = (unsigned short)cblue;
+
+    limit_color(&cF);
+
+    //printf("%d %d %d\n",cF.red,cF.green,cF.blue);
+
+    plot(s, zb, cF, x, y, z);
+
+    z+= delta_z;
+    cred += dred;
+    cgreen += dgreen;
+    cblue += dblue;
+
+  }
+}
+
+void draw_scanline_phong(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, double* v0, double* v1,
+  double* view, double light[2][3], color ambient, struct constants* reflect) {
+
+  int tmpX, tmpZ;
+  double tmpv0[3];
+  double tmpv1[3];
+  double v[3];
+  double vn[3];
+  double vd[3];
+  color c;
+  //swap if needed to assure left->right drawing
+  set(tmpv0, v0);
+  set(tmpv1, v1);
+  if (x0 > x1) {
+    tmpX = x0;
+    tmpZ = z0;
+    x0 = x1;
+    z0 = z1;
+    x1 = tmpX;
+    z1 = tmpZ;
+    set(tmpv1, v0);
+    set(tmpv0, v1);
+  }
+
+  double delta_z;
+  int distance = x1 - x0 + 1;
+  delta_z = (x1 - x0) != 0 ? (z1 - z0) / distance : 0;
+  int x;
+  double z = z0;
+
+  set(v,tmpv0);
+
+  vd[0] = distance != 0 ? (tmpv1[0] - tmpv0[0]) / distance : 0;
+  vd[1] = distance != 0 ? (tmpv1[1] - tmpv0[1]) / distance : 0;
+  vd[2] = distance != 0 ? (tmpv1[2] - tmpv0[2]) / distance : 0;
+
+  for(x=x0; x <= x1; x++) {
+
+    set(vn, v);
+    //normalize(vn);
+
+    c = get_lighting(v, view, ambient, light, reflect);
+
+    plot(s, zb, c, x, y, z);
+
+    z+= delta_z;
+    //add(v, dv);
+    v[0] += vd[0];
+    v[1] += vd[1];
+    v[2] += vd[2];
+
+  }
+}
+
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
           int i
@@ -62,6 +167,243 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color
   int top, mid, bot, y;
   int distance0, distance1, distance2;
   double x0, x1, y0, y1, y2, dx0, dx1, z0, z1, dz0, dz1;
+  int flip = 0;
+
+  z0 = z1 = dz0 = dz1 = 0;
+
+  y0 = points->m[1][i];
+  y1 = points->m[1][i+1];
+  y2 = points->m[1][i+2];
+
+  //find bot, mid, top
+  if ( y0 <= y1 && y0 <= y2) {
+    bot = i;
+    if (y1 <= y2) {
+      mid = i+1;
+      top = i+2;
+    }
+    else {
+      mid = i+2;
+      top = i+1;
+    }
+  }//end y0 bottom
+  else if (y1 <= y0 && y1 <= y2) {
+    bot = i+1;
+    if (y0 <= y2) {
+      mid = i;
+      top = i+2;
+    }
+    else {
+      mid = i+2;
+      top = i;
+    }
+  }//end y1 bottom
+  else {
+    bot = i+2;
+    if (y0 <= y1) {
+      mid = i;
+      top = i+1;
+    }
+    else {
+      mid = i+1;
+      top = i;
+    }
+  }//end y2 bottom
+
+  x0 = points->m[0][bot];
+  x1 = points->m[0][bot];
+  z0 = points->m[2][bot];
+  z1 = points->m[2][bot];
+  y = (int)(points->m[1][bot]);
+
+  distance0 = (int)(points->m[1][top]) - y + 1;
+  distance1 = (int)(points->m[1][mid]) - y + 1;
+  distance2 = (int)(points->m[1][top]) - (int)(points->m[1][mid]) + 1;
+
+  //printf("distance0: %d distance1: %d distance2: %d\n", distance0, distance1, distance2);
+  dx0 = distance0 > 0 ? (points->m[0][top]-points->m[0][bot])/distance0 : 0;
+  dx1 = distance1 > 0 ? (points->m[0][mid]-points->m[0][bot])/distance1 : 0;
+  dz0 = distance0 > 0 ? (points->m[2][top]-points->m[2][bot])/distance0 : 0;
+  dz1 = distance1 > 0 ? (points->m[2][mid]-points->m[2][bot])/distance1 : 0;
+
+  while ( y <= (int)points->m[1][top] ) {
+    //printf("\tx0: %0.2f x1: %0.2f y: %d\n", x0, x1, y);
+
+    if ( !flip && y >= (int)(points->m[1][mid]) ) {
+      flip = 1;
+      dx1 = distance2 > 0 ? (points->m[0][top]-points->m[0][mid])/distance2 : 0;
+      dz1 = distance2 > 0 ? (points->m[2][top]-points->m[2][mid])/distance2 : 0;
+      x1 = points->m[0][mid];
+      z1 = points->m[2][mid];
+    }//end flip code
+    //draw_line(x0, y, z0, x1, y, z1, s, zb, il);
+    draw_scanline(x0, z0, x1, z1, y, s, zb, il);
+
+    x0+= dx0;
+    x1+= dx1;
+    z0+= dz0;
+    z1+= dz1;
+    y++;
+  }//end scanline loop
+}
+
+void scanline_convert_gouraud( struct matrix *points, int i, screen s, zbuffer zb) {
+
+  int top, mid, bot, y;
+  double topV[3], midV[3], botV[3];
+  // double topN[3], midN[3], botN[3];
+  int distance0, distance1, distance2;
+  double x0, x1, y0, y1, y2, dx0, dx1, z0, z1, dz0, dz1;
+  color iTop, iMid, iBot;
+  color c0, c1;
+  double c0R, c0G, c0B, c1R, c1G, c1B;
+  double dc0R, dc0G, dc0B, dc1R, dc1G, dc1B;
+  int flip = 0;
+
+  z0 = z1 = dz0 = dz1 = 0;
+
+  y0 = points->m[1][i];
+  y1 = points->m[1][i+1];
+  y2 = points->m[1][i+2];
+
+  //find bot, mid, top
+  if ( y0 <= y1 && y0 <= y2) {
+    bot = i;
+    if (y1 <= y2) {
+      mid = i+1;
+      top = i+2;
+    }
+    else {
+      mid = i+2;
+      top = i+1;
+    }
+  }//end y0 bottom
+  else if (y1 <= y0 && y1 <= y2) {
+    bot = i+1;
+    if (y0 <= y2) {
+      mid = i;
+      top = i+2;
+    }
+    else {
+      mid = i+2;
+      top = i;
+    }
+  }//end y1 bottom
+  else {
+    bot = i+2;
+    if (y0 <= y1) {
+      mid = i;
+      top = i+1;
+    }
+    else {
+      mid = i+1;
+      top = i;
+    }
+  }//end y2 bottom
+
+
+  x0 = points->m[0][bot];
+  x1 = points->m[0][bot];
+  z0 = points->m[2][bot];
+  z1 = points->m[2][bot];
+  y = (int)(points->m[1][bot]);
+
+  distance0 = (int)(points->m[1][top]) - y + 1;
+  distance1 = (int)(points->m[1][mid]) - y + 1;
+  distance2 = (int)(points->m[1][top]) - (int)(points->m[1][mid]) + 1;
+
+  dx0 = distance0 > 0 ? (points->m[0][top]-points->m[0][bot])/distance0 : 0;
+  dx1 = distance1 > 0 ? (points->m[0][mid]-points->m[0][bot])/distance1 : 0;
+  dz0 = distance0 > 0 ? (points->m[2][top]-points->m[2][bot])/distance0 : 0;
+  dz1 = distance1 > 0 ? (points->m[2][mid]-points->m[2][bot])/distance1 : 0;
+
+  topV[0] = points->m[0][top];
+  topV[1] = points->m[1][top];
+  topV[2] = points->m[2][top];
+
+  midV[0] = points->m[0][mid];
+  midV[1] = points->m[1][mid];
+  midV[2] = points->m[2][mid];
+
+  botV[0] = points->m[0][bot];
+  botV[1] = points->m[1][bot];
+  botV[2] = points->m[2][bot];
+
+  c0R = iBot.red;
+  c0G = iBot.green;
+  c0B = iBot.blue;
+  c1R = iBot.red;
+  c1G = iBot.green;
+  c1B = iBot.blue;
+
+  dc0R = distance0 > 0 ? ((double)iTop.red-(double)iBot.red)/(double)distance0 : 0;
+  dc0G = distance0 > 0 ? ((double)iTop.green-(double)iBot.green)/(double)distance0 : 0;
+  dc0B = distance0 > 0 ? ((double)iTop.blue-(double)iBot.blue)/(double)distance0 : 0;
+
+  dc1R = distance1 > 0 ? ((double)iMid.red-(double)iBot.red)/(double)distance1 : 0;
+  dc1G = distance1 > 0 ? ((double)iMid.green-(double)iBot.green)/(double)distance1 : 0;
+  dc1B = distance1 > 0 ? ((double)iMid.blue-(double)iBot.blue)/(double)distance1 : 0;
+
+  while ( y <= (int)points->m[1][top] ) {
+
+    if ( !flip && y >= (int)(points->m[1][mid]) ) {
+      flip = 1;
+      dx1 = distance2 > 0 ? (points->m[0][top]-points->m[0][mid])/distance2 : 0;
+      dz1 = distance2 > 0 ? (points->m[2][top]-points->m[2][mid])/distance2 : 0;
+
+      dc1R = distance2 > 0 ? ((double)iTop.red-(double)iMid.red)/(double)distance2 : 0;
+      dc1G = distance2 > 0 ? ((double)iTop.green-(double)iMid.green)/(double)distance2 : 0;
+      dc1B = distance2 > 0 ? ((double)iTop.blue-(double)iMid.blue)/(double)distance2 : 0;
+
+      c1R = iMid.red;
+      c1G = iMid.green;
+      c1B = iMid.blue;
+
+      x1 = points->m[0][mid];
+      z1 = points->m[2][mid];
+    }//end flip code
+
+    c0.red = (unsigned short)c0R;
+    c0.green = (unsigned short)c0G;
+    c0.blue = (unsigned short)c0B;
+
+    c1.red = (unsigned short)c1R;
+    c1.green = (unsigned short)c1G;
+    c1.blue = (unsigned short)c1B;
+
+    //printf("%f %f %f %f %f %f\n%d %d %d %d %d %d\n",c0R, c0G, c0B, c1R, c1G, c1B,c0.red,c0.green,c0.blue,c1.red,c1.green,c1.blue);
+
+    draw_scanline_gouraud(x0, z0, x1, z1, y, s, zb, c0, c1);
+
+    x0+= dx0;
+    x1+= dx1;
+    z0+= dz0;
+    z1+= dz1;
+
+    c0R += dc0R;
+    c0G += dc0G;
+    c0B += dc0B;
+
+    c1R += dc1R;
+    c1G += dc1G;
+    c1B += dc1B;
+
+    y++;
+
+  }//end scanline loop
+}
+
+void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb, 
+  double* view, double light[2][3], color ambient, struct constants* reflect) {
+
+  int top, mid, bot, y;
+  double topV[3], midV[3], botV[3];
+  double nTop[3], nMid[3], nBot[3];
+  int distance0, distance1, distance2;
+  double x0, x1, y0, y1, y2, dx0, dx1, z0, z1, dz0, dz1;
+  double v0[3], v1[3];
+  double v0n[3], v1n[3];
+  double dv0[3], dv1[3];
   int flip = 0;
 
   z0 = z1 = dz0 = dz1 = 0;
@@ -123,33 +465,80 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color
   distance1 = (int)(points->m[1][mid]) - y + 1;
   distance2 = (int)(points->m[1][top]) - (int)(points->m[1][mid]) + 1;
 
-  //printf("distance0: %d distance1: %d distance2: %d\n", distance0, distance1, distance2);
   dx0 = distance0 > 0 ? (points->m[0][top]-points->m[0][bot])/distance0 : 0;
   dx1 = distance1 > 0 ? (points->m[0][mid]-points->m[0][bot])/distance1 : 0;
   dz0 = distance0 > 0 ? (points->m[2][top]-points->m[2][bot])/distance0 : 0;
   dz1 = distance1 > 0 ? (points->m[2][mid]-points->m[2][bot])/distance1 : 0;
 
+  topV[0] = points->m[0][top];
+  topV[1] = points->m[1][top];
+  topV[2] = points->m[2][top];
+
+  midV[0] = points->m[0][mid];
+  midV[1] = points->m[1][mid];
+  midV[2] = points->m[2][mid];
+
+  botV[0] = points->m[0][bot];
+  botV[1] = points->m[1][bot];
+  botV[2] = points->m[2][bot];
+
+  //printf("Top: %f %f %f\nMid: %f %f %f\nBot: %f %f %f\n\n", nTop[0], nTop[1], nTop[2], nMid[0], nMid[1], nMid[2], nBot[0], nBot[1], nBot[2]);
+  //printf("%f\n", nBot[0] * nBot[0] + nBot[1] * nBot[1] + nBot[2] * nBot[2]);
+
+  set(v0, nBot);
+  set(v1, nBot);
+
+  dv0[0] = distance0 > 0 ? (nTop[0]-nBot[0])/distance0 : 0;
+  dv0[1] = distance0 > 0 ? (nTop[1]-nBot[1])/distance0 : 0;
+  dv0[2] = distance0 > 0 ? (nTop[2]-nBot[2])/distance0 : 0;
+
+  dv1[0] = distance1 > 0 ? (nMid[0]-nBot[0])/distance1 : 0;
+  dv1[1] = distance1 > 0 ? (nMid[1]-nBot[1])/distance1 : 0;
+  dv1[2] = distance1 > 0 ? (nMid[2]-nBot[2])/distance1 : 0;
+
+  //printf("dv0: %f %f %f\n", dv0[0], dv0[1], dv0[2]);
+
   while ( y <= (int)points->m[1][top] ) {
-    //printf("\tx0: %0.2f x1: %0.2f y: %d\n", x0, x1, y);
 
     if ( !flip && y >= (int)(points->m[1][mid]) ) {
       flip = 1;
       dx1 = distance2 > 0 ? (points->m[0][top]-points->m[0][mid])/distance2 : 0;
       dz1 = distance2 > 0 ? (points->m[2][top]-points->m[2][mid])/distance2 : 0;
+
+      dv1[0] = distance2 > 0 ? (nTop[0]-nMid[0])/distance2 : 0;
+      dv1[1] = distance2 > 0 ? (nTop[1]-nMid[1])/distance2 : 0;
+      dv1[2] = distance2 > 0 ? (nTop[2]-nMid[2])/distance2 : 0;
+
+      set(v1, nMid);
+
       x1 = points->m[0][mid];
       z1 = points->m[2][mid];
     }//end flip code
-    //draw_line(x0, y, z0, x1, y, z1, s, zb, il);
-    draw_scanline(x0, z0, x1, z1, y, s, zb, il);
+
+    //normalize(v0n);
+    //normalize(v1n);
+    //printf("%f %f %f %f %f %f\n%d %d %d %d %d %d\n",c0R, c0G, c0B, c1R, c1G, c1B,c0.red,c0.green,c0.blue,c1.red,c1.green,c1.blue);
+
+    draw_scanline_phong(x0, z0, x1, z1, y, s, zb, v0, v1, view, light, ambient, reflect);
+    //printf("%f %f %f\n", v0[0], v0[1], v0[2]);
 
     x0+= dx0;
     x1+= dx1;
     z0+= dz0;
     z1+= dz1;
+
+    v0[0] += dv0[0];
+    v0[1] += dv0[1];
+    v0[2] += dv0[2];
+
+    v1[0] += dv1[0];
+    v1[1] += dv1[1];
+    v1[2] += dv1[2];
+
     y++;
+
   }//end scanline loop
 }
-
 
 /*======== void add_polygon() ==========
   Inputs:   struct matrix *polygons
@@ -186,7 +575,8 @@ void add_polygon( struct matrix *polygons,
   ====================*/
 void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
                     double *view, double light[2][3], color ambient,
-                    struct constants *reflect, char shade[8]) {
+                    struct constants *reflect, int shading) {
+
   if ( polygons->lastcol < 3 ) {
     printf("Need at least 3 points to draw a polygon!\n");
     return;
@@ -197,12 +587,18 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
   struct normals * nv = NULL;
   char ver[256];
 
+  color meshC;
+  meshC.red = 255;
+  meshC.green = 255;
+  meshC.blue = 255;
+
   for (point=0; point < polygons->lastcol-2; point+=3) {
 
     struct normals * prod;
     struct normals * tmp;
     tmp = (struct normals *) malloc(sizeof *tmp);
     normal = calculate_normal(polygons, point);
+    normalize(normal);
 
     sprintf(ver, "%0.3lf, %0.3lf, %0.3lf",
             polygons->m[0][point],
@@ -210,6 +606,7 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
             polygons->m[2][point]);
 
     // printf("%s\n", v);
+    /*
     HASH_FIND_STR(nv, ver, prod);
     if (prod == NULL) {
       printf("%s: %lf %lf %lf\n", ver, normal[0], normal[1], normal[2]);
@@ -219,12 +616,15 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
       HASH_FIND_STR(nv, ver, prod);
       printf("%s: %lf %lf %lf\n", prod->vertex, prod->normal[0], prod->normal[1], prod->normal[2]);
     }
+    */
 
     if ( normal[2] > 0 ) {
 
       // get color value only if front facing
       color i = get_lighting(normal, view, ambient, light, reflect);
-      scanline_convert(polygons, point, s, zb, i);
+      if(shading == GOURAUD) scanline_convert_gouraud(polygons, point, s, zb);
+      else if(shading == PHONG) scanline_convert_phong(polygons, point, s, zb, view, light, ambient, reflect);
+      else if(shading == STANDARD) scanline_convert(polygons, point, s, zb, meshC);
       /* draw_line( polygons->m[0][point], */
       /*            polygons->m[1][point], */
       /*            polygons->m[2][point], */
