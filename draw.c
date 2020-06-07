@@ -692,6 +692,43 @@ void add_box( struct matrix *polygons,
   add_polygon(polygons, x, y1, z, x, y1, z1, x1, y1, z1);
 }
 
+void parse_mesh(struct matrix * polygons, char * filename){
+  FILE *f;
+  f = fopen(filename, "r");
+  char out[100];
+  char * token;
+  struct matrix * v = new_matrix(4,4);
+
+  if (f == NULL){
+    printf(" File: %s not found", filename);
+  }
+  while (fgets(out,100,f) != NULL){
+    char * in = malloc(100);
+    strcpy(in,out);
+  token = strsep(&in, " ");
+  if (strncmp(token, "v", strlen(token)) == 0) {
+      float x = atof(strsep(&in, " "));
+      float y = atof(strsep(&in, " "));
+      float z = atof(strsep(&in, " "));
+      add_point(v, x, y, z);
+    }
+    else if (strncmp(token, "f", strlen(token)) == 0) {
+      int first = atof(strsep(&in, " ")) - 1;
+      int i;
+      int p1 = atof(strsep(&in, " "))-1;
+      int p2 = -1;
+      char * token;
+      while ((token = strsep(&in, " ")) != NULL){
+        p2 = atof(token) - 1;
+        add_polygon(polygons, v->m[0][first], v->m[1][first], v->m[2][first],
+                              v->m[0][p1], v->m[1][p1], v->m[2][p1], v->m[0][p2], 
+                              v->m[1][p2], v->m[2][p2]);
+        p1 = p2;
+      } fclose(f);
+    }
+  }
+}
+
 
 /*======== void add_sphere() ==========
   Inputs:   struct matrix * points
@@ -906,32 +943,117 @@ struct matrix * generate_torus( double cx, double cy, double cz,
                                 double r1, double r2, int step ) {
 
   struct matrix *points = new_matrix(4, step * step);
-  int circle, rotation, rot_start, rot_stop, circ_start, circ_stop;
+  int circles, rotation, rot_start, rot_stop, c_start, c_stop;
   double x, y, z, rot, circ;
 
   rot_start = 0;
   rot_stop = step;
-  circ_start = 0;
-  circ_stop = step;
+  c_start = 0;
+  c_stop = step;
 
   for (rotation = rot_start; rotation < rot_stop; rotation++) {
     rot = (double)rotation / step;
 
-    for(circle = circ_start; circle < circ_stop; circle++){
-      circ = (double)circle / step;
+    for(circles = c_start; circles < c_stop; circles++){
 
-      x = cos(2*M_PI * rot) *
-        (r1 * cos(2*M_PI * circ) + r2) + cx;
-      y = r1 * sin(2*M_PI * circ) + cy;
-      z = -1*sin(2*M_PI * rot) *
-        (r1 * cos(2*M_PI * circ) + r2) + cz;
+      circ = (double) circles / step;
 
-      //printf("rotation: %d\tcircle: %d\n", rotation, circle);
-      //printf("torus point: (%0.2f, %0.2f, %0.2f)\n", x, y, z);
+      x = cos(2 * M_PI * rot) * (r1 * cos(2*M_PI * circ) + r2) + cx;
+      y = r1 * sin(2 * M_PI * circ) + cy;
+      z = -1*sin(2 * M_PI * rot) * (r1 * cos(2*M_PI * circ) + r2) + cz;
+
       add_point(points, x, y, z);
     }
   }
   return points;
+}
+
+void add_cylinder( struct matrix* edges,
+  double cx, double cy, double cz,
+  double r, double h, int step){
+
+  struct matrix* points = generate_cylinder(cx,cy,cz,r,h,step);
+
+  int longt, longtStart, longtStop;
+  int p0, p1, p2, p3;
+
+  double pTop[3], pBot[3];
+
+  pTop[0] = cx;
+  pTop[1] = cy + (h / 2.0);
+  pTop[2] = cz;
+
+  pBot[0] = cx;
+  pBot[1] = cy - (h / 2.0);
+  pBot[2] = cz;
+
+  longtStart = 0;
+  longtStop = step;
+
+  for(int longt = longtStart; longt < longtStop; longt++){
+    p0 = step + (longt % step);
+    p1 = step + ((longt + 1) % step);
+    p2 = (longt + 1) % step;
+    p3 = longt % step;
+
+    //printf("%lf %lf %lf\n", points->m[0][p0], points->m[1][p0],points->m[2][p0]);
+
+    add_polygon(edges, points->m[0][p0], points->m[1][p0],points->m[2][p0],
+      points->m[0][p1], points->m[1][p1],points->m[2][p1],
+      points->m[0][p2], points->m[1][p2],points->m[2][p2]);
+    add_polygon(edges, points->m[0][p0], points->m[1][p0],points->m[2][p0],
+      points->m[0][p2], points->m[1][p2],points->m[2][p2],
+      points->m[0][p3], points->m[1][p3],points->m[2][p3]);
+
+    add_polygon(edges,pTop[0],pTop[1],pTop[2],
+      points->m[0][p3], points->m[1][p3],points->m[2][p3],
+      points->m[0][p2], points->m[1][p2],points->m[2][p2]);
+
+    add_polygon(edges,pBot[0],pBot[1],pBot[2],
+      points->m[0][p1], points->m[1][p1],points->m[2][p1],
+      points->m[0][p0], points->m[1][p0],points->m[2][p0]);
+
+  }
+
+  free_matrix(points);
+}
+
+struct matrix* generate_cylinder( double cx, double cy, double cz,
+  double r, double h, int step){
+
+  struct matrix* points = new_matrix(4, step*2);
+  int rotation, rot_start, rot_stop;
+  double x, y, z, rot;
+
+  rot_start = 0;
+  rot_stop = step;
+
+  for(rotation = rot_start; rotation < rot_stop; rotation++){
+
+    rot = (double)rotation / step;
+
+    x = r * cos(2 * M_PI * rot) + cx;
+    y = cy + (h / 2.0);
+    z = r * sin(-2 * M_PI * rot) + cz;
+
+    add_point(points,x,y,z);
+
+  }
+
+  for(rotation = rot_start; rotation < rot_stop; rotation++){
+
+    rot = (double) rotation / step;
+
+    x = r * cos(2 * M_PI * rot) + cx;
+    y = cy - (h / 2.0);
+    z = r * sin(-2 * M_PI * rot) + cz;
+
+    add_point(points,x,y,z);
+
+  }
+
+  return points;
+
 }
 
 /*======== void add_circle() ==========

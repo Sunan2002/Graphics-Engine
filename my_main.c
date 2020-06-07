@@ -300,16 +300,30 @@ void my_main() {
           reflect = &white;
           break;
 
-        case MESH:
-          if(op[i].op.mesh.constants != NULL){
-            reflect = lookup_symbol(op[i].op.mesh.constants->name)->s.c;
+         case CYLINDER:
+
+          if (op[i].op.cylinder.constants != NULL){
+            reflect = lookup_symbol(op[i].op.cylinder.constants->name)->s.c;
           }
-          if(op[i].op.mesh.cs != NULL){
-            matrix_mult(op[i].op.mesh.cs->s.m, tmp);
-          } 
-          else {
-            matrix_mult(peek(systems),tmp);
+          if (op[i].op.cylinder.cs != NULL) {
+            //
           }
+
+          add_cylinder(tmp,
+            op[i].op.cylinder.d[0],
+            op[i].op.cylinder.d[1],
+            op[i].op.cylinder.d[2],
+            op[i].op.cylinder.r,
+            op[i].op.cylinder.h,
+            step_3d);
+
+          matrix_mult(peek(systems),tmp);
+          draw_polygons(tmp, t, zb, view, ambient,
+                        reflect, shading);
+
+          tmp->lastcol = 0;
+          reflect = &white;
+          break;
 
         case LINE:
           /* printf("Line: from: %6.2f %6.2f %6.2f to: %6.2f %6.2f %6.2f", */
@@ -412,6 +426,18 @@ void my_main() {
           //printf("Pop");
           pop(systems);
           break;
+
+        case MESH:
+        printf("mesh: filename: %s", op[i].op.mesh.name);
+        if (op[i].op.mesh.constants != NULL){
+          reflect = lookup_symbol(op[i].op.mesh.constants->name)->s.c;
+        }
+        parse_mesh(tmp, op[i].op.mesh.name);
+        matrix_mult(peek(systems), tmp);
+        draw_polygons(tmp, t, zb, view, ambient, reflect, shading);
+        tmp->lastcol = 0;
+        reflect = &white;
+        break;
 
         case SAVE:
           printf("Save: %s\n",op[i].op.save.p->name);

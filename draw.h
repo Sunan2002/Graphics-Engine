@@ -10,6 +10,7 @@
 #define GOURAUD 1
 #define PHONG 2
 
+void parse_mesh(struct matrix * polygons, char * filename);
 void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c);
 void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color il );
 
@@ -35,6 +36,11 @@ struct matrix * generate_sphere(double cx, double cy, double cz,
 void add_torus( struct matrix * edges,
                 double cx, double cy, double cz,
                 double r1, double r2, int step );
+void add_cylinder( struct matrix* edges,
+                   double cx, double cy, double cz,
+                   double r, double h, int step);
+struct matrix * generate_cylinder( double cx, double cy, double cz,
+  double r, double h, int step);
 struct matrix * generate_torus( double cx, double cy, double cz,
                                 double r1, double r2, int step );
 
