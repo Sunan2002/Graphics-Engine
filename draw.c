@@ -100,7 +100,7 @@ void draw_scanline_gouraud(int x0, double z0, int x1, double z1, int y, screen s
 }
 
 void draw_scanline_phong(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, double* v0, double* v1,
-  double* view, double light[2][3], color ambient, struct constants* reflect) {
+  double* view, color ambient, struct constants* reflect) {
 
   int tmpX, tmpZ;
   double tmpv0[3];
@@ -138,14 +138,9 @@ void draw_scanline_phong(int x0, double z0, int x1, double z1, int y, screen s, 
   for(x=x0; x <= x1; x++) {
 
     set(vn, v);
-    //normalize(vn);
-
-    c = get_lighting(v, view, ambient, light, reflect);
-
+    c = get_lighting(v, view, ambient, reflect);
     plot(s, zb, c, x, y, z);
-
     z+= delta_z;
-    //add(v, dv);
     v[0] += vd[0];
     v[1] += vd[1];
     v[2] += vd[2];
@@ -394,7 +389,7 @@ void scanline_convert_gouraud( struct matrix *points, int i, screen s, zbuffer z
 }
 
 void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb, 
-  double* view, double light[2][3], color ambient, struct constants* reflect) {
+  double* view, color ambient, struct constants* reflect) {
 
   int top, mid, bot, y;
   double topV[3], midV[3], botV[3];
@@ -519,7 +514,7 @@ void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb,
     //normalize(v1n);
     //printf("%f %f %f %f %f %f\n%d %d %d %d %d %d\n",c0R, c0G, c0B, c1R, c1G, c1B,c0.red,c0.green,c0.blue,c1.red,c1.green,c1.blue);
 
-    draw_scanline_phong(x0, z0, x1, z1, y, s, zb, v0, v1, view, light, ambient, reflect);
+    draw_scanline_phong(x0, z0, x1, z1, y, s, zb, v0, v1, view, ambient, reflect);
     //printf("%f %f %f\n", v0[0], v0[1], v0[2]);
 
     x0+= dx0;
@@ -574,7 +569,7 @@ void add_polygon( struct matrix *polygons,
   lines connecting each points to create bounding triangles
   ====================*/
 void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
-                    double *view, double light[2][3], color ambient,
+                    double *view, color ambient,
                     struct constants *reflect, int shading) {
 
   if ( polygons->lastcol < 3 ) {
@@ -589,8 +584,8 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
 
   color meshC;
   meshC.red = 255;
-  meshC.green = 255;
-  meshC.blue = 255;
+  meshC.green = 100;
+  meshC.blue = 100;
 
   for (point=0; point < polygons->lastcol-2; point+=3) {
 
@@ -621,9 +616,9 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
     if ( normal[2] > 0 ) {
 
       // get color value only if front facing
-      color i = get_lighting(normal, view, ambient, light, reflect);
+      color i = get_lighting(normal, view, ambient, reflect);
       if(shading == GOURAUD) scanline_convert_gouraud(polygons, point, s, zb);
-      else if(shading == PHONG) scanline_convert_phong(polygons, point, s, zb, view, light, ambient, reflect);
+      else if(shading == PHONG) scanline_convert_phong(polygons, point, s, zb, view, ambient, reflect);
       else if(shading == STANDARD) scanline_convert(polygons, point, s, zb, meshC);
       /* draw_line( polygons->m[0][point], */
       /*            polygons->m[1][point], */

@@ -245,7 +245,7 @@ void my_main() {
                      op[i].op.sphere.d[2],
                      op[i].op.sphere.r, step_3d);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, light, ambient,
+          draw_polygons(tmp, t, zb, view, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
@@ -269,7 +269,7 @@ void my_main() {
                     op[i].op.torus.d[2],
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, light, ambient,
+          draw_polygons(tmp, t, zb, view, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
@@ -294,7 +294,7 @@ void my_main() {
                   op[i].op.box.d1[0],op[i].op.box.d1[1],
                   op[i].op.box.d1[2]);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, light, ambient,
+          draw_polygons(tmp, t, zb, view, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
@@ -431,7 +431,6 @@ void my_main() {
 
     //saving the animation
     if (num_frames > 1) {
-      printf("Saving Frame: %d\n", f);
       sprintf(frame_name, "anim/%s%03d.png", name, f);
       save_extension( t, frame_name );
     } //end frame saving

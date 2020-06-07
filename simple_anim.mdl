@@ -1,33 +1,14 @@
-frames 50
-basename kobe_50
-constants shiny_purple 0.3 0.2 0.8 0.3 0 0 0.3 0.2 0.8
-constants dull_yellow 0.3 0.8 0.2 0.3 0.8 0.2 0 0 0
-constants dull_orange 0.5 0.9 0.5 0.5 0.9 0.5 0 0 0
+  
+frames 100
+basename simple_100
+constants brass 0.329412 0.780392 0.992157 0.223529 0.568627 0.941176 0.027451 0.113725 0.807843
 push
 move 250 250 0
-rotate y -45
-box shiny_purple -350 100 0 25 200 200
-box shiny_purple -200 100 100 25 350 50
-pop
-push 
-move 250 250 0
-torus dull_yellow -100 0 0 10 70
+scale 2 2 2 bigenator
+rotate y 360 spinny
 rotate z 360 spinny
-move 1 0 0 length
-move 0 5 0 arc
-sphere dull_orange 75 100 0 60
-vary spinny 0 49 0 1
-vary length 0 49 0 1
-vary arc 0 49 0 1
-pop
-push
-move 250 0 0 shift
-box shiny_purple 50 475 0 50 15 0
-box shiny_purple 100 475 0 15 50 0
-box shiny_purple 100 425 0 -50 -15 0
-box shiny_purple 50 425 0 15 50 0
-box shiny_purple 50 375 0 65 15 0
-box dull_yellow 125 475 0 15 65 0
-box dull_yellow 125 420 0 65 15 0
-box dull_yellow 175 475 0 15 125 0
-vary shift 0 49 0 1
+torus brass 0 0 0 75 125
+
+vary spinny 0 99 0 1
+vary bigenator 0 49 0 1
+vary bigenator 50 99 1 0
