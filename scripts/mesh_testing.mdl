@@ -6,7 +6,7 @@ move 250 450 0
 rotate x 20
 rotate y 60
 scale 0.5 0.5 0.5
-mesh silver :bike.obj
+mesh silver :airboat.obj
 display
 save
-bike.png
+airboat.png

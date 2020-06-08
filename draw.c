@@ -53,7 +53,6 @@ void draw_scanline_gouraud(int x0, double z0, int x1, double z1, int y, screen s
   color tmpC;
   double cred, cgreen, cblue, dred, dgreen, dblue;
   color cF;
-  //swap if needed to assure left->right drawing
   if (x0 > x1) {
     tmpX = x0;
     tmpZ = z0;
@@ -86,9 +85,6 @@ void draw_scanline_gouraud(int x0, double z0, int x1, double z1, int y, screen s
     cF.blue = (unsigned short)cblue;
 
     limit_color(&cF);
-
-    //printf("%d %d %d\n",cF.red,cF.green,cF.blue);
-
     plot(s, zb, cF, x, y, z);
 
     z+= delta_z;
@@ -109,7 +105,6 @@ void draw_scanline_phong(int x0, double z0, int x1, double z1, int y, screen s, 
   double vn[3];
   double vd[3];
   color c;
-  //swap if needed to assure left->right drawing
   set(tmpv0, v0);
   set(tmpv1, v1);
   if (x0 > x1) {
@@ -968,8 +963,7 @@ struct matrix * generate_torus( double cx, double cy, double cz,
   return points;
 }
 
-void add_cylinder( struct matrix* edges,
-  double cx, double cy, double cz,
+void add_cylinder( struct matrix* edges, double cx, double cy, double cz,
   double r, double h, int step){
 
   struct matrix* points = generate_cylinder(cx,cy,cz,r,h,step);
@@ -995,8 +989,6 @@ void add_cylinder( struct matrix* edges,
     p1 = step + ((longt + 1) % step);
     p2 = (longt + 1) % step;
     p3 = longt % step;
-
-    //printf("%lf %lf %lf\n", points->m[0][p0], points->m[1][p0],points->m[2][p0]);
 
     add_polygon(edges, points->m[0][p0], points->m[1][p0],points->m[2][p0],
       points->m[0][p1], points->m[1][p1],points->m[2][p1],
