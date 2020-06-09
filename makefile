@@ -3,8 +3,8 @@ CFLAGS= -g
 LDFLAGS= -lm
 CC= gcc
 
-run: parser scripts/shape_test.mdl
-	./mdl scripts/mesh_test.mdl
+run: parser scripts/simple_anim.mdl
+		./mdl scripts/mesh_testing.mdl
 
 parser: lex.yy.c y.tab.c y.tab.h $(OBJECTS)
 	gcc -o mdl $(CFLAGS) lex.yy.c y.tab.c $(OBJECTS) $(LDFLAGS)

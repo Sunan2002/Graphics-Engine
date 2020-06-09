@@ -146,7 +146,7 @@ struct vary_node ** second_pass() {
 void my_main() {
 
   struct vary_node ** knobs;
-  struct vary_node * nv;
+  struct vary_node * vn;
   first_pass();
   knobs = second_pass();
   char frame_name[128];
@@ -184,9 +184,9 @@ void my_main() {
 
   //default reflective constants if none are set in script file
   struct constants white;
-  white.r[AMBIENT_R] = 0.1;
-  white.g[AMBIENT_R] = 0.1;
-  white.b[AMBIENT_R] = 0.1;
+  white.r[AMBIENT_R] = 0.2;
+  white.g[AMBIENT_R] = 0.2;
+  white.b[AMBIENT_R] = 0.2;
 
   white.r[DIFFUSE_R] = 0.5;
   white.g[DIFFUSE_R] = 0.5;
@@ -214,12 +214,12 @@ void my_main() {
 
     //if there are multiple frames, set the knobs
     if ( num_frames > 1 ) {
-      nv = knobs[f];
+      vn = knobs[f];
 
-      while ( nv ) {
+      while ( vn ) {
         //printf("\tknob: %s value:%lf\n", nv->name, nv->value);
-        set_value( lookup_symbol( nv->name ), nv->value );
-        nv = nv-> next;
+        set_value( lookup_symbol( vn->name ), vn->value );
+        vn = vn-> next;
       } //end while knobs
     }//end if multiple frames
 
@@ -428,16 +428,19 @@ void my_main() {
           break;
 
         case MESH:
-        printf("mesh: filename: %s", op[i].op.mesh.name);
-        if (op[i].op.mesh.constants != NULL){
-          reflect = lookup_symbol(op[i].op.mesh.constants->name)->s.c;
-        }
-        parse_mesh(tmp, op[i].op.mesh.name);
-        matrix_mult(peek(systems), tmp);
-        draw_polygons(tmp, t, zb, view, ambient, reflect, shading);
-        tmp->lastcol = 0;
-        reflect = &white;
-        break;
+          printf("Mesh: filename: %s\n",op[i].op.mesh.name);
+          if (op[i].op.mesh.constants != NULL)
+            {
+              //printf("\tconstants: %s",op[i].op.mesh.constants->name);
+              reflect = lookup_symbol(op[i].op.mesh.constants->name)->s.c;
+            }
+          parse_mesh(tmp, op[i].op.mesh.name);
+          matrix_mult( peek(systems), tmp );
+          draw_polygons(tmp, t, zb, view, ambient,
+                        reflect, shading);
+          tmp->lastcol = 0;
+          reflect = &white;
+          break;
 
         case SAVE:
           printf("Save: %s\n",op[i].op.save.p->name);
@@ -457,6 +460,7 @@ void my_main() {
 
     //saving the animation
     if (num_frames > 1) {
+      printf("Saving Frame: %d\n", f);
       sprintf(frame_name, "anim/%s%03d.png", name, f);
       save_extension( t, frame_name );
     } //end frame saving

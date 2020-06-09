@@ -688,40 +688,45 @@ void add_box( struct matrix *polygons,
 }
 
 void parse_mesh(struct matrix * polygons, char * filename){
-  FILE *f;
-  f = fopen(filename, "r");
-  char out[100];
-  char * token;
-  struct matrix * v = new_matrix(4,4);
-
-  if (f == NULL){
-    printf(" File: %s not found", filename);
+FILE *fp;
+  fp = fopen(filename, "r");
+  char line[256];
+  char *token;
+  struct matrix * v = new_matrix(4, 4); //list of all vertices
+  if (fp == NULL){ //exception
+    printf("Could not open file: %s", filename);
+    exit(0);
   }
-  while (fgets(out,100,f) != NULL){
-    char * in = malloc(100);
-    strcpy(in,out);
-  token = strsep(&in, " ");
-  if (strncmp(token, "v", strlen(token)) == 0) {
-      float x = atof(strsep(&in, " "));
-      float y = atof(strsep(&in, " "));
-      float z = atof(strsep(&in, " "));
+  while (fgets(line, 256, fp) != NULL){
+    char *out = malloc(256);
+    strcpy(out, line);
+    // printf("%s", r);
+    token = strsep(&out, " ");
+    if (strncmp(token, "v", strlen(token)) == 0) {
+      float x = atof(strsep(&out, " "));
+      float y = atof(strsep(&out, " "));
+      float z = atof(strsep(&out, " "));
       add_point(v, x, y, z);
     }
     else if (strncmp(token, "f", strlen(token)) == 0) {
-      int first = atof(strsep(&in, " ")) - 1;
+      //find first token
+      int first = atof(strsep(&out, " ")) - 1;
+
+      //add triangles
       int i;
-      int p1 = atof(strsep(&in, " "))-1;
+      int p1 = atof(strsep(&out, " ")) - 1;
       int p2 = -1;
       char * token;
-      while ((token = strsep(&in, " ")) != NULL){
+      while ((token = strsep(&out, " ")) != NULL){
         p2 = atof(token) - 1;
         add_polygon(polygons, v->m[0][first], v->m[1][first], v->m[2][first],
-                              v->m[0][p1], v->m[1][p1], v->m[2][p1], v->m[0][p2], 
-                              v->m[1][p2], v->m[2][p2]);
+                              v->m[0][p1], v->m[1][p1], v->m[2][p1],
+                              v->m[0][p2], v->m[1][p2], v->m[2][p2]);
         p1 = p2;
-      } fclose(f);
+      }
     }
   }
+  fclose(fp);
 }
 
 
