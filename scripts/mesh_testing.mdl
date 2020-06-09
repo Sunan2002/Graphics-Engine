@@ -1,19 +1,9 @@
 constants brass 0.329412 0.780392 0.992157 0.223529 0.568627 0.941176 0.027451 0.113725 0.807843
-constants shiny_purple 0.2 0.3 0.7 0.0 0.0 0.0 0.0 0.3 0.7
-constants matte_purple 0.2 0.7 0.3 0.0 0.0 0.0 0.0 0.7 0.3
-constants shiny_purple 0.3 0.2 0.8 0.3 0.0 0.0 0.3 0.2 0.8
-constants shiny_teal 0.3 0.0 0.0 0.3 0.2 0.8 0.3 0.2 0.8
-constants dull_yellow 0.3 0.8 0.2 0.3 0.8 0.2 0 0 0
-constants brass 0.329412 0.780392 0.992157 0.223529 0.568627 0.941176 0.027451 0.113725 0.807843
-constants bronze 0.2125 0.714 0.393548 0.1275 0.4284 0.271906 0.054 0.18144 0.166721
-constants silver 0.19225 0.50754 0.508273 0.19225 0.50754 0.508273 0.19225 0.50754 0.508273
-constants green_rubber 0.0 0.4 0.04 0.05 0.5 0.7 0.0 0.4 0.04
 basename final
-
 move 250 150 0
 rotate x 20
 rotate y -20
 scale 10 10 10
-mesh silver :trumpet.obj
+mesh brass :airboat.obj
 display
-save trumpet.png
+save airboat.png
