@@ -13,10 +13,10 @@
 void parse_mesh(struct matrix * polygons, char * filename);
 void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c);
 void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color il );
-void draw_scanline_gouraud(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c0, color c1);
-void scanline_convert_gouraud( struct matrix *points, int i, screen s, zbuffer zb);
-void draw_scanline_phong(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, double* v0, double* v1, double* view, color ambient, struct constants* reflect);
-void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb, double* view, color ambient, struct constants* reflect);
+//void draw_scanline_gouraud(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c0, color c1);
+//void scanline_convert_gouraud( struct matrix *points, int i, screen s, zbuffer zb);
+//void draw_scanline_phong(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, double* v0, double* v1, double* view, color ambient, struct constants* reflect);
+//void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb, double* view, color ambient, struct constants* reflect);
 
 //polygon organization
 void add_polygons( struct matrix * polys,
@@ -24,8 +24,8 @@ void add_polygons( struct matrix * polys,
                    double x1, double y1, double z1,
                    double x2, double y2, double z2);
 void draw_polygons( struct matrix * polys, screen s, zbuffer zb,
-                    double *view, color ambient,
-                    struct constants *reflect, int shading);
+                    double *view, double light[2][3], color ambient,
+                    struct constants *reflect, char shading[8]);
 
 //advanced shapes
 //3d shapes

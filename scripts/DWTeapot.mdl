@@ -1,4 +1,4 @@
-shading gouraud
+shading phong
 ambient 50 50 50
 constants shiny_white 0.1 0.3 0.7 0.1 0.3 0.7 0.1 0.3 0.7
 constants matte_white 0.0 1.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0
@@ -10,6 +10,6 @@ rotate y 360
 rotate x 360
 move 0 -79 0
 scale 50 50 50
-mesh even_white :teapot.obj
+mesh matte_white :teapot.obj
 save t1.png
 display

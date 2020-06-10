@@ -70,6 +70,7 @@ void first_pass() {
   //These variables are defined at the bottom of symtab.h
   extern int num_frames;
   extern char name[128];
+  extern char shading[8];
 
   num_frames = 1;
   int exist = 0;
@@ -151,6 +152,7 @@ void my_main() {
   knobs = second_pass();
   char frame_name[128];
   int f;
+  char shading[8];
 
   int i;
   struct matrix *tmp;
@@ -159,8 +161,6 @@ void my_main() {
   zbuffer zb;
   double step_3d = 100;
   double theta, xval, yval, zval, knob_val;
-
-  int shading = PHONG; 
 
   //Lighting values here for easy access
   color ambient;
@@ -245,7 +245,7 @@ void my_main() {
                      op[i].op.sphere.d[2],
                      op[i].op.sphere.r, step_3d);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, ambient,
+          draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
@@ -269,7 +269,7 @@ void my_main() {
                     op[i].op.torus.d[2],
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, ambient,
+          draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
@@ -294,7 +294,7 @@ void my_main() {
                   op[i].op.box.d1[0],op[i].op.box.d1[1],
                   op[i].op.box.d1[2]);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, ambient,
+          draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;
@@ -318,7 +318,7 @@ void my_main() {
             step_3d);
 
           matrix_mult(peek(systems),tmp);
-          draw_polygons(tmp, t, zb, view, ambient,
+          draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
 
           tmp->lastcol = 0;
@@ -411,11 +411,13 @@ void my_main() {
           tmp->lastcol = 0;
           break;
 
+        /*
          case SHADING:
           if(!strcmp(op[i].op.shading.p->name,"standard")) shading = STANDARD;
           if(!strcmp(op[i].op.shading.p->name,"gouraud")) shading = GOURAUD;
           if(!strcmp(op[i].op.shading.p->name,"phong")) shading = PHONG;
           break;
+        */
 
         case PUSH:
           //printf("Push");
@@ -436,7 +438,7 @@ void my_main() {
             }
           parse_mesh(tmp, op[i].op.mesh.name);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, ambient,
+          draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
           reflect = &white;

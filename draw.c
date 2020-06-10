@@ -12,7 +12,7 @@
 
 struct normals {
   char vertex[256];
-  double * normal;
+  double normal[3];
   UT_hash_handle hh;
 };
 
@@ -48,6 +48,7 @@ void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffe
   }
 }
 
+/*
 void draw_scanline_gouraud(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c0, color c1) {
   int tmpX, tmpZ;
   color tmpC;
@@ -141,7 +142,7 @@ void draw_scanline_phong(int x0, double z0, int x1, double z1, int y, screen s, 
     v[2] += vd[2];
 
   }
-}
+} */
 
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
@@ -237,6 +238,7 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color
   }//end scanline loop
 }
 
+/*
 void scanline_convert_gouraud( struct matrix *points, int i, screen s, zbuffer zb) {
 
   int top, mid, bot, y;
@@ -406,7 +408,7 @@ void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb,
   /* color c; */
   /* c.red = (23 * (i/3))%255; */
   /* c.green = (109 * (i/3))%255; */
-  /* c.blue = (c.blue+(227 * (i/3)))%255; */
+  /* c.blue = (c.blue+(227 * (i/3)))%255; 
 
   //find bot, mid, top
   if ( y0 <= y1 && y0 <= y2) {
@@ -443,7 +445,7 @@ void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb,
     }
   }//end y2 bottom
   //printf("ybot: %0.2f, ymid: %0.2f, ytop: %0.2f\n", (points->m[1][bot]),(points->m[1][mid]), (points->m[1][top]));
-  /* printf("bot: (%0.2f, %0.2f, %0.2f) mid: (%0.2f, %0.2f, %0.2f) top: (%0.2f, %0.2f, %0.2f)\n", */
+  //printf("bot: (%0.2f, %0.2f, %0.2f) mid: (%0.2f, %0.2f, %0.2f) top: (%0.2f, %0.2f, %0.2f)\n", 
 
   x0 = points->m[0][bot];
   x1 = points->m[0][bot];
@@ -529,6 +531,7 @@ void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb,
 
   }//end scanline loop
 }
+*/
 
 /*======== void add_polygon() ==========
   Inputs:   struct matrix *polygons
@@ -564,8 +567,8 @@ void add_polygon( struct matrix *polygons,
   lines connecting each points to create bounding triangles
   ====================*/
 void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
-                    double *view, color ambient,
-                    struct constants *reflect, int shading) {
+                    double *view, double light[2][3], color ambient,
+                    struct constants *reflect, char shading[8]) {
 
   if ( polygons->lastcol < 3 ) {
     printf("Need at least 3 points to draw a polygon!\n");
@@ -574,15 +577,87 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
 
   int point;
   double *normal;
-  struct normals * nv = NULL;
-  char ver[256];
+  //struct normals * nv = NULL;
+  //char ver[256];
 
-  color meshC;
-  meshC.red = 255;
-  meshC.green = 100;
-  meshC.blue = 100;
+  //color meshC;
+  //meshC.red = 255;
+  //meshC.green = 100;
+  //meshC.blue = 100;
 
-  for (point=0; point < polygons->lastcol-2; point+=3) {
+  if(strcmp(shading, "gouraud") == 0) {
+    struct normals * vn = NULL;
+    for(point=0; point < polygons->lastcol; point++) {
+      normal = calculate_normal(polygons, point);
+      if (normal[2] > 0) {
+        char v[256];
+        sprintf(v, "%0.3lf, %0.3lf, %0.3lf",
+              polygons->m[0][point],
+              polygons->m[1][point],
+              polygons->m[2][point]);
+        struct normals * out;
+        HASH_FIND_STR(vn, v, out);
+        if(out == NULL) {
+          struct normals * tmp;
+          tmp = malloc(sizeof(struct normals));
+          strcpy(tmp->vertex, v);
+          tmp->normal[0] = normal[0];
+          tmp->normal[1] = normal[1];
+          tmp->normal[2] = normal[2];
+          HASH_ADD_STR(vn, vertex, tmp);
+        } else {
+          out->normal[0] = (normal[0] + out->normal[0]) / 2;
+          out->normal[1] = (normal[1] + out->normal[1]) / 2;
+          out->normal[2] = (normal[2] + out->normal[2]) / 2;
+        }
+      }
+    }
+    for(point=0; point < polygons->lastcol-2; point+=3) {
+      char v[256];
+      struct normals * out;
+      sprintf(v, "%0.3lf, %0.3lf, %0.3lf",
+            polygons->m[0][point],
+            polygons->m[1][point],
+            polygons->m[2][point]);
+      HASH_FIND_STR(vn, v, out);
+      if(out != NULL) {
+        if(out->normal[2] > 0) {
+          double *N = (double *)malloc(3 * sizeof(double));
+          N[0] = out->normal[0];
+          N[1] = out->normal[1];
+          N[2] = out->normal[2];
+          color i = get_lighting(N, view, ambient, light, reflect);
+        }
+        // printf("%s %lf\n", out->vertex, out->normal[2]);
+      }
+    }
+  }
+  else if (strcmp(shading, "phong") == 0) {
+  // struct vertex_normals * temp;
+  // for(temp=vn; temp!=NULL; temp=temp->hh.next) {
+  //   printf("%s: %lf %lf %lf\n",
+  //     temp->vertex,
+  //     temp->normal[0],
+  //     temp->normal[1],
+  //     temp->normal[2]);
+  // }
+  } 
+  else {
+    for (point=0; point < polygons->lastcol-2; point+=3) {
+      normal = calculate_normal(polygons, point);
+      if ( normal[2] > 0 ) {
+        // get color value only if front facing
+        color i = get_lighting(normal, view, ambient, light, reflect);
+        scanline_convert(polygons, point, s, zb, i);
+      }
+    }
+  }
+}
+
+
+
+
+  /*for (point=0; point < polygons->lastcol-2; point+=3) {
 
     struct normals * prod;
     struct normals * tmp;
@@ -590,7 +665,7 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
     normal = calculate_normal(polygons, point);
     normalize(normal);
 
-    sprintf(ver, "%0.3lf, %0.3lf, %0.3lf",
+    sprintf(v, "%0.3lf, %0.3lf, %0.3lf",
             polygons->m[0][point],
             polygons->m[1][point],
             polygons->m[2][point]);
@@ -608,7 +683,7 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
     }
     */
 
-    if ( normal[2] > 0 ) {
+    /*if ( normal[2] > 0 ) {
 
       // get color value only if front facing
       color i = get_lighting(normal, view, ambient, reflect);
@@ -635,10 +710,10 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
       /*            polygons->m[0][point+2], */
       /*            polygons->m[1][point+2], */
       /*            polygons->m[2][point+2], */
-      /*            s, zb, c) */;
-    }
+      /*            s, zb, c);
+    } 
   }
-}
+}*/
 
 /*======== void add_box() ==========
   Inputs:   struct matrix * edges
@@ -1018,28 +1093,26 @@ void add_cylinder( struct matrix* edges, double cx, double cy, double cz,
 struct matrix* generate_cylinder( double cx, double cy, double cz,
   double r, double h, int step){
 
-  struct matrix* points = new_matrix(4, step*2);
-  int rotation, rot_start, rot_stop;
+  struct matrix* points = new_matrix(4, 2 * step);
+  int rotate, rot_start, rot_stop;
   double x, y, z, rot;
 
   rot_start = 0;
   rot_stop = step;
 
-  for(rotation = rot_start; rotation < rot_stop; rotation++){
-
-    rot = (double)rotation / step;
-
+  for(rotate = rot_start; rotate < rot_stop; rotate++){
+    
+    rot = (double)rotate / step;
     x = r * cos(2 * M_PI * rot) + cx;
     y = cy + (h / 2.0);
     z = r * sin(-2 * M_PI * rot) + cz;
-
     add_point(points,x,y,z);
 
   }
 
-  for(rotation = rot_start; rotation < rot_stop; rotation++){
+  for(rot = rot_start; rot < rot_stop; rot++){
 
-    rot = (double) rotation / step;
+    rot = (double) rot / step;
 
     x = r * cos(2 * M_PI * rot) + cx;
     y = cy - (h / 2.0);

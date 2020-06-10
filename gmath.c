@@ -22,47 +22,22 @@
 
 
 //lighting functions
-color get_lighting( double *normal, double *view, color alight, struct constants *reflect) {
-  color a, d, s, c;
-  double light[2][3];
-
-  c.red = 0;
-  c.green = 0;
-  c.blue = 0;
+color get_lighting( double *normal, double *view, color alight, double light[2][3], struct constants *reflect) {
+  
+  color a, d, s, i;
+  normalize(normal);
 
   a = calculate_ambient( alight, reflect );
+  d = calculate_diffuse( light, reflect, normal );
+  s = calculate_specular( light, reflect, view, normal );
 
-  c.red += a.red;
-  c.green += a.green;
-  c.blue += a.blue;
+  i.red = a.red + d.red + s.red;
+  i.green = a.green + d.green + s.green;
+  i.blue = a.blue + d.blue + s.blue;
 
-  for(int n = 0; n < lastsym; n++){
-
-    if(symtab[n].type == SYM_LIGHT){
-
-      light[LOCATION][0] = symtab[n].s.l->l[0];
-      light[LOCATION][1] = symtab[n].s.l->l[1];
-      light[LOCATION][2] = symtab[n].s.l->l[2];
-
-      normalize(light[LOCATION]);
-
-      light[COLOR][RED] = symtab[n].s.l->c[RED];
-      light[COLOR][GREEN] = symtab[n].s.l->c[GREEN];
-      light[COLOR][BLUE] = symtab[n].s.l->c[BLUE];
-
-      d = calculate_diffuse( light, reflect, normal );
-      s = calculate_specular( light, reflect, view, normal );
-
-      c.red += d.red + s.red;
-      c.green += d.green + s.green;
-      c.blue += d.blue + s.blue;
-
-      limit_color(&c);
-    }
-  }
-
-  limit_color(&c);
-  return c;
+  limit_color(&i);
+  return i;
+  
 }
 
 color calculate_ambient(color alight, struct constants *reflect ) {
