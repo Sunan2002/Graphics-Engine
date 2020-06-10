@@ -71,7 +71,7 @@ void first_pass() {
   extern int num_frames;
   extern char name[128];
 
-  num_frames = -1;
+  num_frames = 1;
   int exist = 0;
   for (int ctr = 0; ctr < lastop; ctr++) {
       switch (op[ctr].opcode) {
