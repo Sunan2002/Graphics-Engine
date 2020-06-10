@@ -8,12 +8,10 @@
 
 ### Features
 
-## Implementing MDL Features:
+## Implemented MDL Features:
 - Implement Gouraud and Phong shading using `shading` command
-- Implement the `mesh` command
-
-## Will also try and impmement:
-- New primative shapes
+- Implement the `mesh` command (compatible with .obj files)
+- Added Cylinders
 
 
 ----------------------------------------------------------------------------------------------------------------------------
