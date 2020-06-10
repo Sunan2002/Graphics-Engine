@@ -1,9 +1,20 @@
 constants brass 0.329412 0.780392 0.992157 0.223529 0.568627 0.941176 0.027451 0.113725 0.807843
+constants dull_teal 0.3 0.0 0.0 0.3 0.8 0.2 0.5 0.8 0.5
+constants shiny_purple 0.6 0.3 0.3 0.2 0.1 0.3 0.5 0.5 0.7
+constants dull_yellow 0.5 0.6 0.7 0.7 0.7 0.6 0.3 0.4 0.3
+constants dull_red 0.3 0.8 1 0 0 0 0 0 0
+constants dull_orange 0.8 0.8 0.8 0.1 0.4 0.2 0 0 0
+constants indigo 0.8 0.35 0.35 0.8 0.35 0.35 0.8 0.65 0.65
+constants dull_green 0.1 0 0.2 0.9 0.4 0.3 0.3 0 0
+constants pink 0.7 0.5 0.6 0.1 0 0.3 0.4 0.5 0.3
+constants shiny_blue 0 0 0 0 0 0 0.7 0.5 0.9
 basename final
 move 250 150 0
 rotate x 20
 rotate y -20
 scale 10 10 10
-mesh brass :airboat.obj
+mesh brass :airboat.png
+//mesh pink :bike.obj
 display
+//save bike.png
 save airboat.png
