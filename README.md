@@ -20,7 +20,7 @@
 ## Testing Files:
 - final.mdl (Gallery Image and mesh testing)
 - shape_test.mdl (Cylinders and Cones)
--s aveco_test.mdl (Save Coordinate System)
+- saveco_test.mdl (Save Coordinate System)
 
 
 ----------------------------------------------------------------------------------------------------------------------------
