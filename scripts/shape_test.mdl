@@ -1,6 +1,5 @@
 frames 50
-basename gouraud
-shading phong
+basename cylinderTest
 ambient 50 50 50
 constants shiny_white 0.1 0.3 0.7 0.1 0.3 0.7 0.1 0.3 0.7
 constants matte_white 0.0 1.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0

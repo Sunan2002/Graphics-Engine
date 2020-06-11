@@ -244,7 +244,12 @@ void my_main() {
                      op[i].op.sphere.d[1],
                      op[i].op.sphere.d[2],
                      op[i].op.sphere.r, step_3d);
-          matrix_mult( peek(systems), tmp );
+          if (op[i].op.sphere.cs != NULL){
+            matrix_mult(op[i].op.sphere.cs->s.m, tmp);
+          }
+          else {
+            matrix_mult(peek(systems),tmp);
+          }
           draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
@@ -268,7 +273,12 @@ void my_main() {
                     op[i].op.torus.d[1],
                     op[i].op.torus.d[2],
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
-          matrix_mult( peek(systems), tmp );
+          if (op[i].op.torus.cs != NULL) { 
+            matrix_mult(op[i].op.torus.cs->s.m, tmp);
+          }
+          else {
+            matrix_mult( peek(systems), tmp);
+          }
           draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
@@ -285,15 +295,17 @@ void my_main() {
             //printf("\tconstants: %s",op[i].op.box.constants->name);
             reflect = lookup_symbol(op[i].op.sphere.constants->name)->s.c;
           }
-          if (op[i].op.box.cs != NULL) {
-            //printf("\tcs: %s",op[i].op.box.cs->name);
-          }
           add_box(tmp,
                   op[i].op.box.d0[0],op[i].op.box.d0[1],
                   op[i].op.box.d0[2],
                   op[i].op.box.d1[0],op[i].op.box.d1[1],
                   op[i].op.box.d1[2]);
-          matrix_mult( peek(systems), tmp );
+          if (op[i].op.box.cs != NULL) {
+            matrix_mult(op[i].op.box.cs->s.m, tmp);
+          }
+          else {
+            matrix_mult(peek(systems), tmp);
+          }
           draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
@@ -305,10 +317,6 @@ void my_main() {
           if (op[i].op.cylinder.constants != NULL){
             reflect = lookup_symbol(op[i].op.cylinder.constants->name)->s.c;
           }
-          if (op[i].op.cylinder.cs != NULL) {
-            //
-          }
-
           add_cylinder(tmp,
             op[i].op.cylinder.d[0],
             op[i].op.cylinder.d[1],
@@ -316,8 +324,37 @@ void my_main() {
             op[i].op.cylinder.r,
             op[i].op.cylinder.h,
             step_3d);
+          if(op[i].op.cylinder.cs != NULL) {
+            matrix_mult(op[i].op.cylinder.cs->s.m, tmp);
+          }
+          else {
+            matrix_mult(peek(systems), tmp);
+          }
+          draw_polygons(tmp, t, zb, view, light, ambient,
+                        reflect, shading);
 
-          matrix_mult(peek(systems),tmp);
+          tmp->lastcol = 0;
+          reflect = &white;
+          break;
+
+        case CONE:
+
+          if (op[i].op.cone.constants != NULL){
+            reflect = lookup_symbol(op[i].op.cone.constants->name)->s.c;
+          }
+          add_cone(tmp,
+            op[i].op.cone.d[0],
+            op[i].op.cone.d[1],
+            op[i].op.cone.d[2],
+            op[i].op.cone.r,
+            op[i].op.cone.h,
+            step_3d);
+          if(op[i].op.cone.cs != NULL) {
+            matrix_mult(op[i].op.cone.cs->s.m, tmp);
+          }
+          else {
+            matrix_mult(peek(systems), tmp);
+          }
           draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
 
@@ -430,14 +467,19 @@ void my_main() {
           break;
 
         case MESH:
-          printf("Mesh: filename: %s\n",op[i].op.mesh.name);
+          printf("Mesh filename: %s\n",op[i].op.mesh.name);
           if (op[i].op.mesh.constants != NULL)
             {
               //printf("\tconstants: %s",op[i].op.mesh.constants->name);
               reflect = lookup_symbol(op[i].op.mesh.constants->name)->s.c;
             }
           parse_mesh(tmp, op[i].op.mesh.name);
-          matrix_mult( peek(systems), tmp );
+          if(op[i].op.mesh.cs != NULL){
+            matrix_mult(op[i].op.mesh.cs->s.m, tmp);
+          } 
+          else {
+            matrix_mult( peek(systems),tmp);
+          }
           draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
           tmp->lastcol = 0;
@@ -448,6 +490,10 @@ void my_main() {
           printf("Save: %s\n",op[i].op.save.p->name);
           save_extension(t, op[i].op.save.p->name);
           break;
+
+        case SAVE_COORDS:
+        copy_matrix(peek(systems), lookup_symbol(op[i].op.save_coordinate_system.p->name)->s.m);
+        break;
 
         case DISPLAY:
           //printf("Display");

@@ -1,0 +1,22 @@
+push
+move 150 150 0
+save_coord_system sphereCoords
+pop
+push
+move 250 250 0
+save_coord_system boxCoords
+pop
+push
+move 350 350 0
+save_coord_system torusCoords
+pop
+push
+move 450 450 0
+save_coord_system cylinderCoords
+sphere 0 0 0 50 sphereCoords
+box 0 0 0 50 50 50 boxCoords
+torus 0 0 0 25 50 torusCoords
+cylinder 0 0 0 50 50 cylinderCoords
+mesh :airplane.obj
+display
+save saveco_test.png

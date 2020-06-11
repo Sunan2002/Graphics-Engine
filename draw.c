@@ -238,301 +238,6 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color
   }//end scanline loop
 }
 
-/*
-void scanline_convert_gouraud( struct matrix *points, int i, screen s, zbuffer zb) {
-
-  int top, mid, bot, y;
-  double topV[3], midV[3], botV[3];
-  // double topN[3], midN[3], botN[3];
-  int distance0, distance1, distance2;
-  double x0, x1, y0, y1, y2, dx0, dx1, z0, z1, dz0, dz1;
-  color iTop, iMid, iBot;
-  color c0, c1;
-  double c0R, c0G, c0B, c1R, c1G, c1B;
-  double dc0R, dc0G, dc0B, dc1R, dc1G, dc1B;
-  int flip = 0;
-
-  z0 = z1 = dz0 = dz1 = 0;
-
-  y0 = points->m[1][i];
-  y1 = points->m[1][i+1];
-  y2 = points->m[1][i+2];
-
-  //find bot, mid, top
-  if ( y0 <= y1 && y0 <= y2) {
-    bot = i;
-    if (y1 <= y2) {
-      mid = i+1;
-      top = i+2;
-    }
-    else {
-      mid = i+2;
-      top = i+1;
-    }
-  }//end y0 bottom
-  else if (y1 <= y0 && y1 <= y2) {
-    bot = i+1;
-    if (y0 <= y2) {
-      mid = i;
-      top = i+2;
-    }
-    else {
-      mid = i+2;
-      top = i;
-    }
-  }//end y1 bottom
-  else {
-    bot = i+2;
-    if (y0 <= y1) {
-      mid = i;
-      top = i+1;
-    }
-    else {
-      mid = i+1;
-      top = i;
-    }
-  }//end y2 bottom
-
-
-  x0 = points->m[0][bot];
-  x1 = points->m[0][bot];
-  z0 = points->m[2][bot];
-  z1 = points->m[2][bot];
-  y = (int)(points->m[1][bot]);
-
-  distance0 = (int)(points->m[1][top]) - y + 1;
-  distance1 = (int)(points->m[1][mid]) - y + 1;
-  distance2 = (int)(points->m[1][top]) - (int)(points->m[1][mid]) + 1;
-
-  dx0 = distance0 > 0 ? (points->m[0][top]-points->m[0][bot])/distance0 : 0;
-  dx1 = distance1 > 0 ? (points->m[0][mid]-points->m[0][bot])/distance1 : 0;
-  dz0 = distance0 > 0 ? (points->m[2][top]-points->m[2][bot])/distance0 : 0;
-  dz1 = distance1 > 0 ? (points->m[2][mid]-points->m[2][bot])/distance1 : 0;
-
-  topV[0] = points->m[0][top];
-  topV[1] = points->m[1][top];
-  topV[2] = points->m[2][top];
-
-  midV[0] = points->m[0][mid];
-  midV[1] = points->m[1][mid];
-  midV[2] = points->m[2][mid];
-
-  botV[0] = points->m[0][bot];
-  botV[1] = points->m[1][bot];
-  botV[2] = points->m[2][bot];
-
-  c0R = iBot.red;
-  c0G = iBot.green;
-  c0B = iBot.blue;
-  c1R = iBot.red;
-  c1G = iBot.green;
-  c1B = iBot.blue;
-
-  dc0R = distance0 > 0 ? ((double)iTop.red-(double)iBot.red)/(double)distance0 : 0;
-  dc0G = distance0 > 0 ? ((double)iTop.green-(double)iBot.green)/(double)distance0 : 0;
-  dc0B = distance0 > 0 ? ((double)iTop.blue-(double)iBot.blue)/(double)distance0 : 0;
-
-  dc1R = distance1 > 0 ? ((double)iMid.red-(double)iBot.red)/(double)distance1 : 0;
-  dc1G = distance1 > 0 ? ((double)iMid.green-(double)iBot.green)/(double)distance1 : 0;
-  dc1B = distance1 > 0 ? ((double)iMid.blue-(double)iBot.blue)/(double)distance1 : 0;
-
-  while ( y <= (int)points->m[1][top] ) {
-
-    if ( !flip && y >= (int)(points->m[1][mid]) ) {
-      flip = 1;
-      dx1 = distance2 > 0 ? (points->m[0][top]-points->m[0][mid])/distance2 : 0;
-      dz1 = distance2 > 0 ? (points->m[2][top]-points->m[2][mid])/distance2 : 0;
-
-      dc1R = distance2 > 0 ? ((double)iTop.red-(double)iMid.red)/(double)distance2 : 0;
-      dc1G = distance2 > 0 ? ((double)iTop.green-(double)iMid.green)/(double)distance2 : 0;
-      dc1B = distance2 > 0 ? ((double)iTop.blue-(double)iMid.blue)/(double)distance2 : 0;
-
-      c1R = iMid.red;
-      c1G = iMid.green;
-      c1B = iMid.blue;
-
-      x1 = points->m[0][mid];
-      z1 = points->m[2][mid];
-    }//end flip code
-
-    c0.red = (unsigned short)c0R;
-    c0.green = (unsigned short)c0G;
-    c0.blue = (unsigned short)c0B;
-
-    c1.red = (unsigned short)c1R;
-    c1.green = (unsigned short)c1G;
-    c1.blue = (unsigned short)c1B;
-
-    //printf("%f %f %f %f %f %f\n%d %d %d %d %d %d\n",c0R, c0G, c0B, c1R, c1G, c1B,c0.red,c0.green,c0.blue,c1.red,c1.green,c1.blue);
-
-    draw_scanline_gouraud(x0, z0, x1, z1, y, s, zb, c0, c1);
-
-    x0+= dx0;
-    x1+= dx1;
-    z0+= dz0;
-    z1+= dz1;
-
-    c0R += dc0R;
-    c0G += dc0G;
-    c0B += dc0B;
-
-    c1R += dc1R;
-    c1G += dc1G;
-    c1B += dc1B;
-
-    y++;
-
-  }//end scanline loop
-}
-
-void scanline_convert_phong( struct matrix *points, int i, screen s, zbuffer zb, 
-  double* view, color ambient, struct constants* reflect) {
-
-  int top, mid, bot, y;
-  double topV[3], midV[3], botV[3];
-  double nTop[3], nMid[3], nBot[3];
-  int distance0, distance1, distance2;
-  double x0, x1, y0, y1, y2, dx0, dx1, z0, z1, dz0, dz1;
-  double v0[3], v1[3];
-  double v0n[3], v1n[3];
-  double dv0[3], dv1[3];
-  int flip = 0;
-
-  z0 = z1 = dz0 = dz1 = 0;
-
-  y0 = points->m[1][i];
-  y1 = points->m[1][i+1];
-  y2 = points->m[1][i+2];
-
-  // Alas random color, we hardly knew ye
-  /* color c; */
-  /* c.red = (23 * (i/3))%255; */
-  /* c.green = (109 * (i/3))%255; */
-  /* c.blue = (c.blue+(227 * (i/3)))%255; 
-
-  //find bot, mid, top
-  if ( y0 <= y1 && y0 <= y2) {
-    bot = i;
-    if (y1 <= y2) {
-      mid = i+1;
-      top = i+2;
-    }
-    else {
-      mid = i+2;
-      top = i+1;
-    }
-  }//end y0 bottom
-  else if (y1 <= y0 && y1 <= y2) {
-    bot = i+1;
-    if (y0 <= y2) {
-      mid = i;
-      top = i+2;
-    }
-    else {
-      mid = i+2;
-      top = i;
-    }
-  }//end y1 bottom
-  else {
-    bot = i+2;
-    if (y0 <= y1) {
-      mid = i;
-      top = i+1;
-    }
-    else {
-      mid = i+1;
-      top = i;
-    }
-  }//end y2 bottom
-  //printf("ybot: %0.2f, ymid: %0.2f, ytop: %0.2f\n", (points->m[1][bot]),(points->m[1][mid]), (points->m[1][top]));
-  //printf("bot: (%0.2f, %0.2f, %0.2f) mid: (%0.2f, %0.2f, %0.2f) top: (%0.2f, %0.2f, %0.2f)\n", 
-
-  x0 = points->m[0][bot];
-  x1 = points->m[0][bot];
-  z0 = points->m[2][bot];
-  z1 = points->m[2][bot];
-  y = (int)(points->m[1][bot]);
-
-  distance0 = (int)(points->m[1][top]) - y + 1;
-  distance1 = (int)(points->m[1][mid]) - y + 1;
-  distance2 = (int)(points->m[1][top]) - (int)(points->m[1][mid]) + 1;
-
-  dx0 = distance0 > 0 ? (points->m[0][top]-points->m[0][bot])/distance0 : 0;
-  dx1 = distance1 > 0 ? (points->m[0][mid]-points->m[0][bot])/distance1 : 0;
-  dz0 = distance0 > 0 ? (points->m[2][top]-points->m[2][bot])/distance0 : 0;
-  dz1 = distance1 > 0 ? (points->m[2][mid]-points->m[2][bot])/distance1 : 0;
-
-  topV[0] = points->m[0][top];
-  topV[1] = points->m[1][top];
-  topV[2] = points->m[2][top];
-
-  midV[0] = points->m[0][mid];
-  midV[1] = points->m[1][mid];
-  midV[2] = points->m[2][mid];
-
-  botV[0] = points->m[0][bot];
-  botV[1] = points->m[1][bot];
-  botV[2] = points->m[2][bot];
-
-  //printf("Top: %f %f %f\nMid: %f %f %f\nBot: %f %f %f\n\n", nTop[0], nTop[1], nTop[2], nMid[0], nMid[1], nMid[2], nBot[0], nBot[1], nBot[2]);
-  //printf("%f\n", nBot[0] * nBot[0] + nBot[1] * nBot[1] + nBot[2] * nBot[2]);
-
-  set(v0, nBot);
-  set(v1, nBot);
-
-  dv0[0] = distance0 > 0 ? (nTop[0]-nBot[0])/distance0 : 0;
-  dv0[1] = distance0 > 0 ? (nTop[1]-nBot[1])/distance0 : 0;
-  dv0[2] = distance0 > 0 ? (nTop[2]-nBot[2])/distance0 : 0;
-
-  dv1[0] = distance1 > 0 ? (nMid[0]-nBot[0])/distance1 : 0;
-  dv1[1] = distance1 > 0 ? (nMid[1]-nBot[1])/distance1 : 0;
-  dv1[2] = distance1 > 0 ? (nMid[2]-nBot[2])/distance1 : 0;
-
-  //printf("dv0: %f %f %f\n", dv0[0], dv0[1], dv0[2]);
-
-  while ( y <= (int)points->m[1][top] ) {
-
-    if ( !flip && y >= (int)(points->m[1][mid]) ) {
-      flip = 1;
-      dx1 = distance2 > 0 ? (points->m[0][top]-points->m[0][mid])/distance2 : 0;
-      dz1 = distance2 > 0 ? (points->m[2][top]-points->m[2][mid])/distance2 : 0;
-
-      dv1[0] = distance2 > 0 ? (nTop[0]-nMid[0])/distance2 : 0;
-      dv1[1] = distance2 > 0 ? (nTop[1]-nMid[1])/distance2 : 0;
-      dv1[2] = distance2 > 0 ? (nTop[2]-nMid[2])/distance2 : 0;
-
-      set(v1, nMid);
-
-      x1 = points->m[0][mid];
-      z1 = points->m[2][mid];
-    }//end flip code
-
-    //normalize(v0n);
-    //normalize(v1n);
-    //printf("%f %f %f %f %f %f\n%d %d %d %d %d %d\n",c0R, c0G, c0B, c1R, c1G, c1B,c0.red,c0.green,c0.blue,c1.red,c1.green,c1.blue);
-
-    draw_scanline_phong(x0, z0, x1, z1, y, s, zb, v0, v1, view, ambient, reflect);
-    //printf("%f %f %f\n", v0[0], v0[1], v0[2]);
-
-    x0+= dx0;
-    x1+= dx1;
-    z0+= dz0;
-    z1+= dz1;
-
-    v0[0] += dv0[0];
-    v0[1] += dv0[1];
-    v0[2] += dv0[2];
-
-    v1[0] += dv1[0];
-    v1[1] += dv1[1];
-    v1[2] += dv1[2];
-
-    y++;
-
-  }//end scanline loop
-}
-*/
-
 /*======== void add_polygon() ==========
   Inputs:   struct matrix *polygons
             double x0
@@ -763,16 +468,16 @@ void add_box( struct matrix *polygons,
 }
 
 void parse_mesh(struct matrix * polygons, char * filename){
-FILE *fp;
-  fp = fopen(filename, "r");
+FILE *f;
+  f = fopen(filename, "r");
   char line[256];
   char *token;
   struct matrix * v = new_matrix(4, 4); //list of all vertices
-  if (fp == NULL){ //exception
+  if (f == NULL){ //exception
     printf("Could not open file: %s", filename);
     exit(0);
   }
-  while (fgets(line, 256, fp) != NULL){
+  while (fgets(line, 256, f) != NULL){
     char *out = malloc(256);
     strcpy(out, line);
     // printf("%s", r);
@@ -801,7 +506,7 @@ FILE *fp;
       }
     }
   }
-  fclose(fp);
+  fclose(f);
 }
 
 
@@ -1044,7 +749,7 @@ struct matrix * generate_torus( double cx, double cy, double cz,
 }
 
 void add_cylinder( struct matrix* edges, double cx, double cy, double cz,
-  double r, double h, int step){
+                    double r, double h, int step){
 
   struct matrix* points = generate_cylinder(cx,cy,cz,r,h,step);
 
@@ -1090,8 +795,22 @@ void add_cylinder( struct matrix* edges, double cx, double cy, double cz,
   free_matrix(points);
 }
 
+/*======== void generate_cylinder() ==========
+  Inputs:   struct matrix * points
+            double cx
+            double cy
+            double cz
+            double r
+            double h
+            int step
+  Returns: Generates all the points along the surface
+           of a cylinder (cx, cy, cz),
+           circle radius r and height h
+           step points per circle.
+           Returns a matrix of those points
+  ====================*/
 struct matrix* generate_cylinder( double cx, double cy, double cz,
-  double r, double h, int step){
+                                  double r, double h, int step){
 
   struct matrix* points = new_matrix(4, 2 * step);
   int rotate, rot_start, rot_stop;
@@ -1113,11 +832,9 @@ struct matrix* generate_cylinder( double cx, double cy, double cz,
   for(rot = rot_start; rot < rot_stop; rot++){
 
     rot = (double) rot / step;
-
     x = r * cos(2 * M_PI * rot) + cx;
     y = cy - (h / 2.0);
     z = r * sin(-2 * M_PI * rot) + cz;
-
     add_point(points,x,y,z);
 
   }
@@ -1125,6 +842,57 @@ struct matrix* generate_cylinder( double cx, double cy, double cz,
   return points;
 
 }
+
+struct matrix * generate_cone( double cx, double cy, double cz,
+                double r, double h, int step){
+  struct matrix * points = new_matrix(4, 2 * step);
+  int rotate, rot_start, rot_stop;
+  double x, y, z, rot;
+
+  add_point(points, cx, cy, cz); //center of base of cone
+  add_point(points, cx, cy+h, cz); //top of cone
+
+  rot_start = 0;
+  rot_stop = step;
+
+  for(rot = rot_start; rot < rot_stop; rot++){
+
+    rot = (double) rot / step;
+    x = r * cos(2 * M_PI * rot) + cx;
+    //y = cy - (h / 2.0);
+    z = r * sin(-2 * M_PI * rot) + cz;
+    add_point(points,x,cy,z);
+
+  }
+
+  return points;
+
+}
+
+void add_cone( struct matrix* edges, double cx, double cy, double cz,
+                    double r, double h, int step){
+
+  struct matrix * points = generate_cone(cx, cy, cz, r, h, step);
+
+  int longt, longtStart, longtStop;
+  longtStart = 2;
+  longtStop = step + 2;
+
+  for(int longt = longtStart; longt < longtStop; longt++){
+    int next = (longt - 1) % step + 2;
+    add_polygon(edges, points->m[0][0], points->m[0][1], points->m[0][2],
+                    points->m[longt][0], points->m[longt][1], points->m[longt][2],
+                    points->m[next][0], points->m[next][1], points->m[next][2]);
+    add_polygon(edges, points->m[1][0], points->m[1][1], points->m[1][2],
+                points->m[next][0], points->m[next][1], points->m[next][2],
+                points->m[longt][0], points->m[longt][1], points->m[longt][2]);
+  }
+
+  free_matrix(points);
+
+}
+
+
 
 /*======== void add_circle() ==========
   Inputs:   struct matrix * edges

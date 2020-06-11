@@ -64,6 +64,12 @@ struct command
       SYMTAB *cs;
     } cylinder;
     struct {
+      SYMTAB* constants;
+      double d[4];
+      double r, h;
+      SYMTAB *cs;
+    } cone;
+    struct {
       SYMTAB *constants;
       double d0[4],d1[4];
       SYMTAB *cs;
