@@ -18,10 +18,10 @@
 - Implement Gouraud and Phong shading using `shading` command
 
 ## Testing Files:
--final.mdl (Gallery Image)
--mesh_testing.mdl (Mesh with .obj files)
--shape_test.mdl (Cylinders and Cones)
--saveco_test.mdl (Save Coordinate System)
+- final.mdl (Gallery Image)
+- mesh_testing.mdl (Mesh with .obj files)
+- shape_test.mdl (Cylinders and Cones)
+- saveco_test.mdl (Save Coordinate System)
 
 
 ----------------------------------------------------------------------------------------------------------------------------
