@@ -237,18 +237,16 @@ void my_main() {
             //printf("\tconstants: %s",op[i].op.sphere.constants->name);
             reflect = lookup_symbol(op[i].op.sphere.constants->name)->s.c;
           }
-          if (op[i].op.sphere.cs != NULL) {
-            //printf("\tcs: %s",op[i].op.sphere.cs->name);
-          }
           add_sphere(tmp, op[i].op.sphere.d[0],
                      op[i].op.sphere.d[1],
                      op[i].op.sphere.d[2],
                      op[i].op.sphere.r, step_3d);
-          if (op[i].op.sphere.cs != NULL){
-            matrix_mult(op[i].op.sphere.cs->s.m, tmp);
-          }
+          if (op[i].op.sphere.cs != NULL) {
+            //printf("\tcs: %s",op[i].op.sphere.cs->name);
+            matrix_mult( op[i].op.sphere.cs->s.m, tmp);
+          } 
           else {
-            matrix_mult(peek(systems),tmp);
+            matrix_mult( peek(systems), tmp );
           }
           draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);
@@ -265,19 +263,17 @@ void my_main() {
             //printf("\tconstants: %s",op[i].op.torus.constants->name);
             reflect = lookup_symbol(op[i].op.sphere.constants->name)->s.c;
           }
-          if (op[i].op.torus.cs != NULL) {
-            //printf("\tcs: %s",op[i].op.torus.cs->name);
-          }
           add_torus(tmp,
                     op[i].op.torus.d[0],
                     op[i].op.torus.d[1],
                     op[i].op.torus.d[2],
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
-          if (op[i].op.torus.cs != NULL) { 
+          if (op[i].op.torus.cs != NULL) {
+            //printf("\tcs: %s",op[i].op.torus.cs->name);
             matrix_mult(op[i].op.torus.cs->s.m, tmp);
-          }
+          } 
           else {
-            matrix_mult( peek(systems), tmp);
+            matrix_mult(peek(systems),tmp);
           }
           draw_polygons(tmp, t, zb, view, light, ambient,
                         reflect, shading);

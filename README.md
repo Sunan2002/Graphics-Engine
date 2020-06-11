@@ -9,9 +9,19 @@
 ### Features
 
 ## Implemented MDL Features:
-- Implement Gouraud and Phong shading using `shading` command
 - Implement the `mesh` command (compatible with .obj files)
+- Save_Coordinate_System
 - Added Cylinders
+- Added Cones
+
+## MDL Features I tried to implement bu ultimately failed:
+- Implement Gouraud and Phong shading using `shading` command
+
+##Testing Files:
+-final.mdl (Gallery Image)
+-mesh_testing.mdl (Mesh with .obj files)
+-shape_test.mdl (Cylinders and Cones)
+-saveco_test.mdl (Save Coordinate System)
 
 
 ----------------------------------------------------------------------------------------------------------------------------

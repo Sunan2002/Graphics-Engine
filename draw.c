@@ -756,15 +756,15 @@ void add_cylinder( struct matrix* edges, double cx, double cy, double cz,
   int longt, longtStart, longtStop;
   int p0, p1, p2, p3;
 
-  double pTop[3], pBot[3];
+  double top[3], bot[3];
 
-  pTop[0] = cx;
-  pTop[1] = cy + (h / 2.0);
-  pTop[2] = cz;
+  top[0] = cx;
+  top[1] = cy + (h / 2.0);
+  top[2] = cz;
 
-  pBot[0] = cx;
-  pBot[1] = cy - (h / 2.0);
-  pBot[2] = cz;
+  bot[0] = cx;
+  bot[1] = cy - (h / 2.0);
+  bot[2] = cz;
 
   longtStart = 0;
   longtStop = step;
@@ -782,11 +782,11 @@ void add_cylinder( struct matrix* edges, double cx, double cy, double cz,
       points->m[0][p2], points->m[1][p2],points->m[2][p2],
       points->m[0][p3], points->m[1][p3],points->m[2][p3]);
 
-    add_polygon(edges,pTop[0],pTop[1],pTop[2],
+    add_polygon(edges,top[0],top[1],top[2],
       points->m[0][p3], points->m[1][p3],points->m[2][p3],
       points->m[0][p2], points->m[1][p2],points->m[2][p2]);
 
-    add_polygon(edges,pBot[0],pBot[1],pBot[2],
+    add_polygon(edges,bot[0],bot[1],bot[2],
       points->m[0][p1], points->m[1][p1],points->m[2][p1],
       points->m[0][p0], points->m[1][p0],points->m[2][p0]);
 
@@ -812,7 +812,7 @@ void add_cylinder( struct matrix* edges, double cx, double cy, double cz,
 struct matrix* generate_cylinder( double cx, double cy, double cz,
                                   double r, double h, int step){
 
-  struct matrix* points = new_matrix(4, 2 * step);
+  struct matrix* points = new_matrix(4, step*2);
   int rotate, rot_start, rot_stop;
   double x, y, z, rot;
 
@@ -820,48 +820,28 @@ struct matrix* generate_cylinder( double cx, double cy, double cz,
   rot_stop = step;
 
   for(rotate = rot_start; rotate < rot_stop; rotate++){
-    
+
     rot = (double)rotate / step;
+
     x = r * cos(2 * M_PI * rot) + cx;
     y = cy + (h / 2.0);
     z = r * sin(-2 * M_PI * rot) + cz;
+
+    //printf("%lf %lf %lf\n",x,y,z);
+
     add_point(points,x,y,z);
 
   }
 
-  for(rot = rot_start; rot < rot_stop; rot++){
+  for(rotate = rot_start; rotate < rot_stop; rotate++){
 
-    rot = (double) rot / step;
+    rot = (double)rotate / step;
+
     x = r * cos(2 * M_PI * rot) + cx;
     y = cy - (h / 2.0);
     z = r * sin(-2 * M_PI * rot) + cz;
+
     add_point(points,x,y,z);
-
-  }
-
-  return points;
-
-}
-
-struct matrix * generate_cone( double cx, double cy, double cz,
-                double r, double h, int step){
-  struct matrix * points = new_matrix(4, 2 * step);
-  int rotate, rot_start, rot_stop;
-  double x, y, z, rot;
-
-  add_point(points, cx, cy, cz); //center of base of cone
-  add_point(points, cx, cy+h, cz); //top of cone
-
-  rot_start = 0;
-  rot_stop = step;
-
-  for(rot = rot_start; rot < rot_stop; rot++){
-
-    rot = (double) rot / step;
-    x = r * cos(2 * M_PI * rot) + cx;
-    //y = cy - (h / 2.0);
-    z = r * sin(-2 * M_PI * rot) + cz;
-    add_point(points,x,cy,z);
 
   }
 
@@ -872,7 +852,7 @@ struct matrix * generate_cone( double cx, double cy, double cz,
 void add_cone( struct matrix* edges, double cx, double cy, double cz,
                     double r, double h, int step){
 
-  struct matrix * points = generate_cone(cx, cy, cz, r, h, step);
+  struct matrix *points = generate_cone(cx, cy, cz, r, h, step);
 
   int longt, longtStart, longtStop;
   longtStart = 2;
@@ -887,10 +867,35 @@ void add_cone( struct matrix* edges, double cx, double cy, double cz,
                 points->m[next][0], points->m[next][1], points->m[next][2],
                 points->m[longt][0], points->m[longt][1], points->m[longt][2]);
   }
-
   free_matrix(points);
+}
+
+struct matrix* generate_cone( double cx, double cy, double cz,
+                double r, double h, int step){
+  struct matrix * points = new_matrix(4, step * 2);
+  int rotate, rot_start, rot_stop;
+  double x, y, z, rot;
+
+  add_point(points, cx, cy, cz); //center of base of cone
+  add_point(points, cx, cy+h, cz); //top of cone
+
+  rot_start = 0;
+  rot_stop = step;
+
+  for(rotate = rot_start; rotate < rot_stop; rotate++){
+
+    rot = (double) rot / step;
+    x = r * cos(2 * M_PI * rot) + cx;
+    y = cy - (h / 2.0);
+    z = r * sin(-2 * M_PI * rot) + cz;
+    add_point(points,x,y,z);
+
+  }
+
+  return points;
 
 }
+
 
 
 
