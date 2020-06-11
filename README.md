@@ -14,14 +14,13 @@
 - Added Cylinders
 - Added Cones
 
-## MDL Features I tried to implement bu ultimately failed:
+## MDL Features I tried to implement but ultimately failed:
 - Implement Gouraud and Phong shading using `shading` command
 
-##Testing Files:
--final.mdl (Gallery Image)
--mesh_testing.mdl (Mesh with .obj files)
--shape_test.mdl (Cylinders and Cones)
--saveco_test.mdl (Save Coordinate System)
+## Testing Files:
+- final.mdl (Gallery Image and mesh testing)
+- shape_test.mdl (Cylinders and Cones)
+-s aveco_test.mdl (Save Coordinate System)
 
 
 ----------------------------------------------------------------------------------------------------------------------------

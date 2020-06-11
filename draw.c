@@ -359,67 +359,6 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
   }
 }
 
-
-
-
-  /*for (point=0; point < polygons->lastcol-2; point+=3) {
-
-    struct normals * prod;
-    struct normals * tmp;
-    tmp = (struct normals *) malloc(sizeof *tmp);
-    normal = calculate_normal(polygons, point);
-    normalize(normal);
-
-    sprintf(v, "%0.3lf, %0.3lf, %0.3lf",
-            polygons->m[0][point],
-            polygons->m[1][point],
-            polygons->m[2][point]);
-
-    // printf("%s\n", v);
-    /*
-    HASH_FIND_STR(nv, ver, prod);
-    if (prod == NULL) {
-      printf("%s: %lf %lf %lf\n", ver, normal[0], normal[1], normal[2]);
-      strcpy(tmp->vertex, ver);
-      tmp->normal = normal;
-      HASH_ADD_STR(nv, vertex, tmp);
-      HASH_FIND_STR(nv, ver, prod);
-      printf("%s: %lf %lf %lf\n", prod->vertex, prod->normal[0], prod->normal[1], prod->normal[2]);
-    }
-    */
-
-    /*if ( normal[2] > 0 ) {
-
-      // get color value only if front facing
-      color i = get_lighting(normal, view, ambient, reflect);
-      if(shading == GOURAUD) scanline_convert_gouraud(polygons, point, s, zb);
-      else if(shading == PHONG) scanline_convert_phong(polygons, point, s, zb, view, ambient, reflect);
-      else if(shading == STANDARD) scanline_convert(polygons, point, s, zb, meshC);
-      /* draw_line( polygons->m[0][point], */
-      /*            polygons->m[1][point], */
-      /*            polygons->m[2][point], */
-      /*            polygons->m[0][point+1], */
-      /*            polygons->m[1][point+1], */
-      /*            polygons->m[2][point+1], */
-      /*            s, zb, c); */
-      /* draw_line( polygons->m[0][point+2], */
-      /*            polygons->m[1][point+2], */
-      /*            polygons->m[2][point+2], */
-      /*            polygons->m[0][point+1], */
-      /*            polygons->m[1][point+1], */
-      /*            polygons->m[2][point+1], */
-      /*            s, zb, c); */
-      /* draw_line( polygons->m[0][point], */
-      /*            polygons->m[1][point], */
-      /*            polygons->m[2][point], */
-      /*            polygons->m[0][point+2], */
-      /*            polygons->m[1][point+2], */
-      /*            polygons->m[2][point+2], */
-      /*            s, zb, c);
-    } 
-  }
-}*/
-
 /*======== void add_box() ==========
   Inputs:   struct matrix * edges
             double x
@@ -851,49 +790,42 @@ struct matrix* generate_cylinder( double cx, double cy, double cz,
 
 void add_cone( struct matrix* edges, double cx, double cy, double cz,
                     double r, double h, int step){
-
-  struct matrix *points = generate_cone(cx, cy, cz, r, h, step);
-
+  struct matrix *bottom = generate_cone(cx, cy, cz, r, h, step);
   int longt, longtStart, longtStop;
-  longtStart = 2;
-  longtStop = step + 2;
-
-  for(int longt = longtStart; longt < longtStop; longt++){
-    int next = (longt - 1) % step + 2;
-    add_polygon(edges, points->m[0][0], points->m[0][1], points->m[0][2],
-                    points->m[longt][0], points->m[longt][1], points->m[longt][2],
-                    points->m[next][0], points->m[next][1], points->m[next][2]);
-    add_polygon(edges, points->m[1][0], points->m[1][1], points->m[1][2],
-                points->m[next][0], points->m[next][1], points->m[next][2],
-                points->m[longt][0], points->m[longt][1], points->m[longt][2]);
+  longtStart = 0;
+  for (longt = longtStart; longt < step; longt++){
+    longtStop = (longt + 1) % step;
+    //bottom cap
+    add_polygon(edges, cx, cy, cz,
+                bottom->m[0][longt], bottom->m[1][longt], bottom->m[2][longt],
+                bottom->m[0][longtStop], bottom->m[1][longtStop], bottom->m[2][longtStop]);
+    //surface triangle
+    add_polygon(edges, cx, cy + h, cz,
+                bottom->m[0][longtStop], bottom->m[1][longtStop], bottom->m[2][longtStop],
+                bottom->m[0][longt], bottom->m[1][longt], bottom->m[2][longt]);
   }
-  free_matrix(points);
+
 }
 
 struct matrix* generate_cone( double cx, double cy, double cz,
                 double r, double h, int step){
   struct matrix * points = new_matrix(4, step * 2);
   int rotate, rot_start, rot_stop;
-  double x, y, z, rot;
-
-  add_point(points, cx, cy, cz); //center of base of cone
-  add_point(points, cx, cy+h, cz); //top of cone
+  double x, z, rot;
 
   rot_start = 0;
   rot_stop = step;
 
   for(rotate = rot_start; rotate < rot_stop; rotate++){
 
-    rot = (double) rot / step;
+    rot = (double) rotate / step;
     x = r * cos(2 * M_PI * rot) + cx;
-    y = cy - (h / 2.0);
-    z = r * sin(-2 * M_PI * rot) + cz;
-    add_point(points,x,y,z);
+    z = r * sin(2 * M_PI * rot) + cz;
+    add_point(points,x,cy,z);
 
   }
 
   return points;
-
 }
 
 
